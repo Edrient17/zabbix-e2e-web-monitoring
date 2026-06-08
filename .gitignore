@@ -1,0 +1,33 @@
+# Environment variables / secrets
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+logs/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Docker / local runtime data
+data/
+volumes/
+postgres-data/
+
+# Temporary files
+*.tmp
+*.bak
+*.backup
+
+# Report build outputs
+*.aux
+*.out
+*.toc
