@@ -9,7 +9,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
-    volumes:
+    volumes: # PostgreSQL 데이터 영속성을 위한 볼륨 마운트
       - postgres-data:/var/lib/postgresql/data
     networks:
       - zabbix-net
@@ -81,6 +81,11 @@ services:
       - ./nginx/conf.d/default.conf:/etc/nginx/conf.d/default.conf:ro
     ports:
       - "80:80"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
     networks:
       - zabbix-net
 
