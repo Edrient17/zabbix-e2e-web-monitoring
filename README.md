@@ -28,7 +28,7 @@ Zabbix Web Scenario와 Browser Item을 활용하여 웹서비스의 가용성과
 
 ## 3. 아키텍처
 
-![Architecture Diagram](images/screenshots/architecture_diagram.jpg)
+![Architecture Diagram](images/architecture_diagram.jpg)
 
 각 보라색 사각형은 Docker Compose로 구성한 컨테이너이다.
 
