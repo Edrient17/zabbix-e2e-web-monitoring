@@ -93,14 +93,14 @@ VM 환경에는 다음 소프트웨어가 필요하다.
 
 ## 7. 네트워크 및 포트 정책
 
-본 프로젝트는 Docker Compose에 서비스별 포트 매핑을 명시하고, 실제 외부 접근 제어는 Cloud VM Security Group에서 수행한다.
+본 프로젝트는 Docker Compose에 서비스별 포트 매핑을 명시하고, 실제 외부 접근 제어는 Cloud VM의 Security Group에서 수행한다.
 
 | 컴포넌트             |        포트 | 용도                  | 접근 정책                  |
 | ---------------- | --------: | ------------------- | ---------------------- |
 | Zabbix Web UI    |  8080/tcp | 관리자 Web UI 접속       | 허용된 IP 또는 업무망에서 접근     |
 | Zabbix Server    | 10051/tcp | Zabbix 내부 서비스 포트    | Security Group에서 외부 차단 |
 | Zabbix Agent2    | 10050/tcp | Agent 통신 포트         | Security Group에서 외부 차단 |
-| nginx Sample App |    80/tcp | Web Scenario 테스트 대상 | 기본적으로 내부 통신 목적         |
+| nginx Sample App |    80/tcp | Web Scenario 테스트 대상 | 기본적으로 내부 통신 목적. Security Group에서 외부 차단 |
 | PostgreSQL       |  5432/tcp | Zabbix 데이터베이스       | Security Group에서 외부 차단 |
 
 Zabbix Web Scenario에서는 외부 IP가 아니라 Docker 내부 서비스명인 `nginx`를 사용한다.
@@ -114,12 +114,16 @@ Zabbix Server는 Docker 내부 네트워크를 통해 `zabbix-agent2:10050`으�
 ```bash
 docker compose up -d
 ```
+- 정상 기동 예시
+![docker_compose_up_screenshot](images/screenshots/week1/screenshot_1_docker_compose_up.png)
 
 컨테이너 상태를 확인한다.
 
 ```bash
 docker compose ps
 ```
+- 정상 기동 예시
+![docker_compose_ps_screenshot](images/screenshots/week1/screenshot_2_docker_compose_ps.png)
 
 정상 기동 시 다음 컨테이너가 실행된다.
 
@@ -162,6 +166,8 @@ curl -i http://127.0.0.1/
 curl -i http://127.0.0.1/health
 curl -i http://127.0.0.1/status
 ```
+- 정상 기동 예시
+![nginx_sample_screenshot](images/screenshots/week1/screenshot_3_nginx_sample_test.png)
 
 nginx 설정 문법은 다음 명령어로 확인한다.
 
