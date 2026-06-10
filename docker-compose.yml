@@ -76,18 +76,18 @@ services:
   nginx:
     image: nginx:1.27-alpine
     container_name: nginx-sample
-    restart: unless-stopped
-    volumes:
-      - ./nginx/conf.d/default.conf:/etc/nginx/conf.d/default.conf:ro
     ports:
       - "80:80"
-    healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
+    volumes:
+      - ./nginx/conf.d/default.conf:/etc/nginx/conf.d/default.conf:ro
     networks:
       - zabbix-net
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
 
 networks:
   # Zabbix 구성 요소들이 통신할 수 있는 전용 네트워크
