@@ -2,7 +2,7 @@ services:
 
   # PostgreSQL Database for Zabbix Server
   postgresql:
-    image: postgres:16-alpine
+    image: postgres:16.14-alpine
     container_name: zabbix-postgresql
     restart: unless-stopped # 항상 실행되도록 설정
     environment:
@@ -21,7 +21,7 @@ services:
 
   # Zabbix Server
   zabbix-server:
-    image: zabbix/zabbix-server-pgsql:alpine-7.0-latest
+    image: zabbix/zabbix-server-pgsql:alpine-7.0.27
     container_name: zabbix-server
     restart: unless-stopped
     environment:
@@ -40,7 +40,7 @@ services:
 
   # Zabbix Web Interface
   zabbix-web:
-    image: zabbix/zabbix-web-nginx-pgsql:alpine-7.0-latest
+    image: zabbix/zabbix-web-nginx-pgsql:alpine-7.0.27
     container_name: zabbix-web
     restart: unless-stopped
     environment:
@@ -60,7 +60,7 @@ services:
 
   # Zabbix Agent 2
   zabbix-agent2:
-    image: zabbix/zabbix-agent2:alpine-7.0-latest
+    image: zabbix/zabbix-agent2:alpine-7.0.27
     container_name: zabbix-agent2
     restart: unless-stopped
     environment:
@@ -74,7 +74,7 @@ services:
 
   # Nginx Web Server to be monitored
   nginx:
-    image: nginx:1.27-alpine
+    image: nginx:1.27.5-alpine
     container_name: nginx-sample
     expose:
       - "80"
