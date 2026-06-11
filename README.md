@@ -96,16 +96,18 @@ VM 환경에는 다음 소프트웨어가 필요하다.
 
 ## 7. 네트워크 및 포트 정책
 
-본 프로젝트는 Docker Compose에 서비스별 포트 매핑을 명시하고, 실제 외부 접근 제어는 Cloud VM의 Security Group에서 수행한다.
+본 프로젝트는 Docker Compose에 서비스별 포트 사용 목적을 명시하고, 실제 외부 접근 제어는 Cloud VM의 Security Group에서 수행한다.
+Security Group 인바운드 규칙은 허용 목록 방식으로 관리하며, 명시적으로 허용하지 않은 포트와 출발지는 암시적으로 거부된다.
 
-| 컴포넌트             |        포트 | 용도                  | 접근 정책                  |
-| ---------------- | --------: | ------------------- | ---------------------- |
-| Zabbix Web UI    |  8080/tcp | 관리자 Web UI 접속       | 허용된 IP 또는 업무망에서 접근     |
-| Zabbix Server    | 10051/tcp | Zabbix 내부 서비스 포트    | Security Group에서 외부 차단 |
-| Zabbix Agent2    | 10050/tcp | Agent 통신 포트         | Security Group에서 외부 차단 |
-| nginx Sample App |    80/tcp | Web Scenario 테스트 대상 | 기본적으로 내부 통신 목적. Security Group에서 외부 차단 |
-| PostgreSQL       |  5432/tcp | Zabbix 데이터베이스       | Security Group에서 외부 차단 |
+| 컴포넌트             |        포트 | 용도                  | 노출 범위         | Security Group 정책       |
+| ---------------- | --------: | ------------------- | ------------- | ----------------------- |
+| Zabbix Web UI    |  8080/tcp | 관리자 Web UI 접속       | 외부 노출 필요      | 허용된 IP 또는 업무망에서만 허용    |
+| Zabbix Server    | 10051/tcp | Zabbix 내부 서비스 포트    | Docker 내부 전용   | 외부 인바운드 허용 규칙 없음      |
+| Zabbix Agent2    | 10050/tcp | Agent 통신 포트         | Docker 내부 전용   | 외부 인바운드 허용 규칙 없음      |
+| nginx Sample App |    80/tcp | Web Scenario 테스트 대상 | Docker 내부 전용   | 외부 인바운드 허용 규칙 없음      |
+| PostgreSQL       |  5432/tcp | Zabbix 데이터베이스       | Docker 내부 전용 | 외부 인바운드 허용 규칙 없음      |
 
+Docker Compose에서 호스트에 publish되는 포트는 Zabbix Web UI의 `8080/tcp`뿐이다.
 Zabbix Web Scenario에서는 외부 IP가 아니라 Docker 내부 서비스명인 `nginx`를 사용한다.
 Zabbix Server는 Docker 내부 네트워크를 통해 `zabbix-agent2:10050`으로 Agent2에 접근한다.
 
