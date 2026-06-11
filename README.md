@@ -87,8 +87,11 @@ VM 환경에는 다음 소프트웨어가 필요하다.
 * Ubuntu 24.04 LTS
 * Docker Engine 26.x 이상
 * Docker Compose v2.x 이상
+* Zabbix Server	7.x LTS, Zabbix Web (Frontend) (동일 버전)
+* PostgreSQL 15.x 이상
+* nginx 1.24 이상
 * Git 2.x 이상
-* curl 또는 wget
+* curl / wget 기본 포함
 
 
 ## 7. 네트워크 및 포트 정책
