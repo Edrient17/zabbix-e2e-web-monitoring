@@ -72,6 +72,25 @@ services:
     networks:
       - zabbix-net
 
+  # Zabbix Agent 2 sidecar for nginx process/script monitoring
+  nginx-agent2:
+    image: zabbix/zabbix-agent2:alpine-7.0.27
+    container_name: nginx-agent2
+    restart: unless-stopped
+    pid: "container:nginx-sample"
+    environment:
+      ZBX_HOSTNAME: nginx-sample
+      ZBX_SERVER_HOST: zabbix-server
+      ZBX_SERVER_PORT: 10051
+      ZBX_ALLOWKEY: system.run[sh /var/lib/zabbix/user_scripts/nginx_process_count.sh],system.run[sh /var/lib/zabbix/user_scripts/nginx_active_connections.sh],system.run[sh /var/lib/zabbix/user_scripts/nginx_total_requests.sh]
+    volumes:
+      - ./zabbix/agent2/scripts:/var/lib/zabbix/user_scripts:ro
+    depends_on:
+      - zabbix-server
+      - nginx
+    networks:
+      - zabbix-net
+
   # Nginx Web Server to be monitored
   nginx:
     image: nginx:1.27.5-alpine

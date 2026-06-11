@@ -41,6 +41,7 @@ nginx 샘플 앱은 Docker 내부 네트워크에서 다음 주소로 접근한�
 http://nginx/
 http://nginx/health
 http://nginx/status
+http://nginx/nginx_status
 ```
 
 
@@ -54,6 +55,7 @@ Docker Compose로 구성한 서비스는 다음과 같다.
 | zabbix-server | zabbix-server     | Zabbix 모니터링 서버                   |
 | zabbix-web    | zabbix-web        | Zabbix Web Frontend              |
 | zabbix-agent2 | zabbix-agent2     | Zabbix Server에 호스트 상태 메트릭을 제공하는 모니터링 에이전트 |
+| nginx-agent2  | nginx-agent2      | nginx 프로세스 및 내부 상태를 `system.run[]`으로 수집하는 전용 에이전트 |
 | nginx         | nginx-sample      | Web Scenario 테스트용 샘플 웹서비스        |
 
 
@@ -68,6 +70,8 @@ Docker Compose로 구성한 서비스는 다음과 같다.
 │   └── conf.d/
 │       └── default.conf
 ├── zabbix/
+│   ├── agent2/
+│   │   └── scripts/
 │   └── export/
 ├── images/
 │   └── screenshots/
@@ -104,12 +108,14 @@ Security Group 인바운드 규칙은 허용 목록 방식으로 관리하며, �
 | Zabbix Web UI    |  8080/tcp | 관리자 Web UI 접속       | 외부 노출 필요      | 허용된 IP 또는 업무망에서만 허용    |
 | Zabbix Server    | 10051/tcp | Zabbix 내부 서비스 포트    | Docker 내부 전용   | 외부 인바운드 허용 규칙 없음      |
 | Zabbix Agent2    | 10050/tcp | Agent 통신 포트         | Docker 내부 전용   | 외부 인바운드 허용 규칙 없음      |
+| nginx Agent2     | 10050/tcp | nginx 전용 Agent 통신 포트 | Docker 내부 전용   | 외부 인바운드 허용 규칙 없음      |
 | nginx Sample App |    80/tcp | Web Scenario 테스트 대상 | Docker 내부 전용   | 외부 인바운드 허용 규칙 없음      |
 | PostgreSQL       |  5432/tcp | Zabbix 데이터베이스       | Docker 내부 전용 | 외부 인바운드 허용 규칙 없음      |
 
 Docker Compose에서 호스트에 publish되는 포트는 Zabbix Web UI의 `8080/tcp`뿐이다.
 Zabbix Web Scenario에서는 외부 IP가 아니라 Docker 내부 서비스명인 `nginx`를 사용한다.
 Zabbix Server는 Docker 내부 네트워크를 통해 `zabbix-agent2:10050`으로 Agent2에 접근한다.
+nginx 전용 `nginx-agent2`는 `nginx-sample` 컨테이너의 PID namespace를 공유하여 nginx 프로세스 상태를 확인한다.
 
 
 ## 8. 설치 및 기동 방법
@@ -134,6 +140,7 @@ docker compose ps
 
 ```text
 nginx-sample
+nginx-agent2
 zabbix-agent2
 zabbix-postgresql
 zabbix-server
@@ -154,7 +161,7 @@ docker compose down -v
 ```
 
 
-## 9. nginx 샘플 앱 검증
+## 9. nginx 샘플 앱
 
 nginx 샘플 웹서비스는 Web Scenario 테스트 대상으로 사용된다.
 
@@ -163,6 +170,9 @@ nginx 샘플 웹서비스는 Web Scenario 테스트 대상으로 사용된다.
 | `/`       | HTTP 200, `Welcome to nginx` | 메인 페이지 Required String 검증 |
 | `/health` | HTTP 200, `OK`               | 상태 확인 엔드포인트 검증            |
 | `/status` | HTTP 200, `status check`     | 상태 페이지 응답 및 응답시간 검증       |
+| `/nginx_status` | nginx stub_status 응답 | Agent2 `system.run[]` 내부 지표 수집 |
+
+### 9.1 nginx 샘플 앱 검증
 
 VM 내부에서 다음 명령어로 확인할 수 있다.
 
@@ -187,6 +197,37 @@ docker exec zabbix-server sh -c "wget -qO- http://nginx/ || true"
 docker exec zabbix-server sh -c "wget -qO- http://nginx/health || true"
 docker exec zabbix-server sh -c "wget -qO- http://nginx/status || true"
 ```
+
+### 9.2 zabbix-agent2 system.run 기반 nginx 내부 상태 수집
+
+기존 Web Scenario는 URL 기준의 사용자 관점 가용성 검증에 사용한다.
+추가로 `nginx-agent2`는 `system.run[]` item을 통해 스크립트를 실행하고 nginx 프로세스 및 내부 지표를 수집한다.
+
+Zabbix UI에서 `nginx-sample` 호스트를 별도로 만들고 Agent Interface를 DNS `nginx-agent2`, Port `10050`으로 설정한다.
+이후 다음 item key를 Zabbix agent 타입으로 등록한다.
+
+```text
+system.run[sh /var/lib/zabbix/user_scripts/nginx_process_count.sh]
+system.run[sh /var/lib/zabbix/user_scripts/nginx_active_connections.sh]
+system.run[sh /var/lib/zabbix/user_scripts/nginx_total_requests.sh]
+```
+
+각 item의 의미는 다음과 같다.
+
+| item key | 수집 값 | 목적 |
+| -------- | ------- | ---- |
+| `nginx_process_count.sh` | nginx master/worker 프로세스 수 | URL이 아니라 프로세스 기준으로 nginx 동작 여부 확인 |
+| `nginx_active_connections.sh` | 현재 active connection 수 | nginx 내부 연결 상태 확인 |
+| `nginx_total_requests.sh` | 누적 request 수 | 요청 처리량 추세 확인 |
+
+이 구성에서는 `system.run[]` 전체를 허용하지 않고, `docker-compose.yml`의 `ZBX_ALLOWKEY`로 필요한 스크립트 실행만 허용한다.
+
+***보안상 주의할 점***은 다음과 같다.
+
+* `system.run[]`은 Agent가 OS 명령을 실행하는 기능이므로 전체 허용하지 않고 필요한 명령만 `AllowKey`로 제한한다.
+* `nginx-agent2`에는 Docker socket을 마운트하지 않는다. Docker socket을 열면 Agent가 다른 컨테이너나 호스트 Docker를 조작할 수 있어 권한 범위가 지나치게 커진다.
+* `/nginx_status`는 내부 지표 엔드포인트이므로 외부에 공개하지 않고 Docker 내부 네트워크에서만 접근하도록 `allow`/`deny`를 설정한다.
+* `nginx-agent2`는 `nginx-sample`의 PID namespace만 공유하여 프로세스 확인 범위를 nginx 컨테이너로 제한한다.
 
 
 ## 10. Zabbix Web UI 접속 및 초기 설정
@@ -222,6 +263,7 @@ Password: zabbix
 * Zabbix Web UI 접속 확인
 * Zabbix Admin 기본 비밀번호 변경
 * Zabbix Agent2 availability 문제 해결
+* nginx 전용 Agent2 sidecar 및 `system.run[]` 기반 내부 상태 수집 구성
 * Week 1 검증 스크린샷 정리
 
 ### 예정
