@@ -417,7 +417,7 @@ docker stop nginx-sample
 * 장애 알림 메일이 수신된다.
 
 <details>
-<summary>장애 발생 스크린샷 보기</summary>
+<summary><strong>장애 발생 스크린샷 보기</strong></summary>
 
 <img src="images/screenshots/week2/scenario_1/web_scenario_stop_nginx.png" alt="web_scenario_stop_nginx" width="600">
 
@@ -440,7 +440,7 @@ docker start nginx-sample
 * 복구 알림 메일이 수신된다.
 
 <details>
-<summary>복구 스크린샷 보기</summary>
+<summary><strong>복구 스크린샷 보기</strong></summary>
 <img src="images/screenshots/week2/scenario_1/web_scenario_start_nginx.png" alt="web_scenario_recovered_problem" width="600">
 
 
@@ -484,7 +484,7 @@ docker exec nginx-sample nginx -s reload
 * Warning 알림 메일이 수신된다.
 
 <details>
-<summary>장애 발생 스크린샷 보기</summary>
+<summary><strong>장애 발생 스크린샷 보기</strong></summary>
 
 <img src="images/screenshots/week2/scenario_2/status_response_time_problem.png" alt="status_response_time_problem" width="600">
 
@@ -506,7 +506,7 @@ docker exec nginx-sample nginx -s reload
 * 복구 알림 메일이 수신된다.
 
 <details>
-<summary>복구 스크린샷 보기</summary>
+<summary><strong>복구 스크린샷 보기</strong></summary>
 
 <img src="images/screenshots/week2/scenario_2/status_response_time_recovered.png" alt="status_response_time_recovered" width="600">
 
@@ -545,7 +545,7 @@ docker exec nginx-sample nginx -s reload
 * 각 Trigger에 대한 High 알림 메일이 수신된다.
 
 <details>
-<summary>장애 발생 스크린샷 보기</summary>
+<summary><strong>장애 발생 스크린샷 보기</strong></summary>
 
 <img src="images/screenshots/week2/scenario_3/health_response_code_problem.png" alt="health_response_code_problem" width="600">
 
@@ -569,7 +569,7 @@ docker exec nginx-sample nginx -s reload
 * 복구 알림 메일이 수신된다.
 
 <details>
-<summary>복구 스크린샷 보기</summary>
+<summary><strong>복구 스크린샷 보기</strong></summary>
 
 <img src="images/screenshots/week2/scenario_3/health_response_code_recovered.png" alt="health_response_code_recovered" width="600">
 
@@ -616,7 +616,7 @@ docker exec zabbix-server sh -c 'for i in $(seq 1 60); do wget -qO- http://nginx
 * Warning 알림 메일이 수신된다.
 
 <details>
-<summary>장애 발생 스크린샷 보기</summary>
+<summary><strong>장애 발생 스크린샷 보기</strong></summary>
 
 <img src="images/screenshots/week2/scenario_4/active_connections_problem.png" alt="active_connections_problem" width="600">
 
@@ -640,7 +640,7 @@ docker exec nginx-sample nginx -s reload
 * 복구 알림 메일이 수신된다.
 
 <details>
-<summary>복구 스크린샷 보기</summary>
+<summary><strong>복구 스크린샷 보기</strong></summary>
 
 <img src="images/screenshots/week2/scenario_4/active_connections_recovered.png" alt="active_connections_recovered" width="600">
 
@@ -670,7 +670,7 @@ docker restart nginx-sample
 * Information 알림 메일이 수신된다.
 
 <details>
-<summary>장애 발생 스크린샷 보기</summary>
+<summary><strong>장애 발생 스크린샷 보기</strong></summary>
 
 <img src="images/screenshots/week2/scenario_5/request_counter_reset_problem.png" alt="request_counter_reset_problem" width="600">
 
@@ -694,7 +694,7 @@ docker exec zabbix-server sh -c 'wget -qO- http://nginx/status >/dev/null'
 * 복구 알림 메일이 수신된다.
 
 <details>
-<summary>복구 스크린샷 보기</summary>
+<summary><strong>복구 스크린샷 보기</strong></summary>
 
 <img src="images/screenshots/week2/scenario_5/request_counter_reset_recovered.png" alt="request_counter_reset_recovered" width="600">
 
