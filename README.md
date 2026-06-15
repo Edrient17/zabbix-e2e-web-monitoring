@@ -514,7 +514,7 @@ docker exec nginx-sample nginx -s reload
 
 </details>
 
-### 8.3 `/health` 응답 코드 비정상 테스트
+### 8.3 응답 코드 비정상 테스트
 
 `/health` 응답 코드가 `200`이 아니도록 nginx 설정을 임시로 변경한다. 테스트 전 원본 설정을 백업한다.
 

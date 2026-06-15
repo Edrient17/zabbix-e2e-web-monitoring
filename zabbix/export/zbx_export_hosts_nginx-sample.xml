@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<zabbix_export>
+    <version>7.0</version>
+    <host_groups>
+        <host_group>
+            <uuid>dc579cd7a1a34222933f24f52a68bcd8</uuid>
+            <name>Linux servers</name>
+        </host_group>
+    </host_groups>
+    <hosts>
+        <host>
+            <host>nginx-sample</host>
+            <name>nginx-sample</name>
+            <groups>
+                <group>
+                    <name>Linux servers</name>
+                </group>
+            </groups>
+            <interfaces>
+                <interface>
+                    <useip>NO</useip>
+                    <dns>nginx-agent2</dns>
+                    <interface_ref>if1</interface_ref>
+                </interface>
+            </interfaces>
+            <items>
+                <item>
+                    <name>nginx active connections</name>
+                    <key>system.run[sh /var/lib/zabbix/user_scripts/nginx_active_connections.sh]</key>
+                    <delay>30s</delay>
+                    <interface_ref>if1</interface_ref>
+                    <triggers>
+                        <trigger>
+                            <expression>last(/nginx-sample/system.run[sh /var/lib/zabbix/user_scripts/nginx_active_connections.sh])&gt;50</expression>
+                            <name>nginx active connections is high</name>
+                            <priority>WARNING</priority>
+                        </trigger>
+                    </triggers>
+                </item>
+                <item>
+                    <name>nginx process count</name>
+                    <key>system.run[sh /var/lib/zabbix/user_scripts/nginx_process_count.sh]</key>
+                    <delay>30s</delay>
+                    <interface_ref>if1</interface_ref>
+                </item>
+                <item>
+                    <name>nginx total requests</name>
+                    <key>system.run[sh /var/lib/zabbix/user_scripts/nginx_total_requests.sh]</key>
+                    <delay>30s</delay>
+                    <interface_ref>if1</interface_ref>
+                    <triggers>
+                        <trigger>
+                            <expression>change(/nginx-sample/system.run[sh /var/lib/zabbix/user_scripts/nginx_total_requests.sh])&lt;0</expression>
+                            <name>nginx request counter reset detected</name>
+                            <priority>INFO</priority>
+                        </trigger>
+                    </triggers>
+                </item>
+            </items>
+            <inventory_mode>DISABLED</inventory_mode>
+        </host>
+    </hosts>
+</zabbix_export>

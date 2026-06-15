@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<zabbix_export>
+    <version>7.0</version>
+    <host_groups>
+        <host_group>
+            <uuid>6f6799aa69e844b4b3918f779f2abf08</uuid>
+            <name>Zabbix servers</name>
+        </host_group>
+    </host_groups>
+    <hosts>
+        <host>
+            <host>Zabbix server</host>
+            <name>Zabbix server</name>
+            <templates>
+                <template>
+                    <name>Linux by Zabbix agent</name>
+                </template>
+                <template>
+                    <name>Zabbix server health</name>
+                </template>
+            </templates>
+            <groups>
+                <group>
+                    <name>Zabbix servers</name>
+                </group>
+            </groups>
+            <interfaces>
+                <interface>
+                    <useip>NO</useip>
+                    <dns>zabbix-agent2</dns>
+                    <interface_ref>if1</interface_ref>
+                </interface>
+            </interfaces>
+            <httptests>
+                <httptest>
+                    <name>nginx-web-availability</name>
+                    <steps>
+                        <step>
+                            <name>root</name>
+                            <url>http://nginx/</url>
+                            <follow_redirects>NO</follow_redirects>
+                            <required>Welcome to nginx</required>
+                            <status_codes>200</status_codes>
+                        </step>
+                        <step>
+                            <name>health</name>
+                            <url>http://nginx/health</url>
+                            <follow_redirects>NO</follow_redirects>
+                            <required>OK</required>
+                            <status_codes>200</status_codes>
+                        </step>
+                        <step>
+                            <name>status</name>
+                            <url>http://nginx/status</url>
+                            <follow_redirects>NO</follow_redirects>
+                            <required>status check</required>
+                            <status_codes>200</status_codes>
+                        </step>
+                    </steps>
+                </httptest>
+            </httptests>
+            <inventory>
+                <name>3a23d2a7c815</name>
+                <os>Linux version 6.8.0-48-generic (buildd@lcy02-amd64-010) (x86_64-linux-gnu-gcc-13 (Ubuntu 13.2.0-23ubuntu4) 13.2.0, GNU ld (GNU B</os>
+                <location_lat>56.97612</location_lat>
+                <location_lon>24.16553</location_lon>
+            </inventory>
+            <inventory_mode>AUTOMATIC</inventory_mode>
+        </host>
+    </hosts>
+    <triggers>
+        <trigger>
+            <expression>last(/Zabbix server/web.test.rspcode[nginx-web-availability,root])&lt;&gt;200
+or last(/Zabbix server/web.test.rspcode[nginx-web-availability,health])&lt;&gt;200
+or last(/Zabbix server/web.test.rspcode[nginx-web-availability,status])&lt;&gt;200</expression>
+            <name>Nginx endpoint response code is not 200</name>
+            <priority>HIGH</priority>
+        </trigger>
+        <trigger>
+            <expression>last(/Zabbix server/web.test.time[nginx-web-availability,status,resp])&gt;3</expression>
+            <name>Nginx status response time is too high</name>
+            <priority>WARNING</priority>
+        </trigger>
+        <trigger>
+            <expression>last(/Zabbix server/web.test.fail[nginx-web-availability])&gt;0</expression>
+            <name>Nginx web scenario failed</name>
+            <priority>HIGH</priority>
+        </trigger>
+    </triggers>
+</zabbix_export>
