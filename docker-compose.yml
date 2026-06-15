@@ -30,6 +30,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
       ZBX_SERVER_NAME: ${ZBX_SERVER_NAME}
+      TZ: ${PHP_TZ}
     depends_on:
       postgresql:
         condition: service_healthy
