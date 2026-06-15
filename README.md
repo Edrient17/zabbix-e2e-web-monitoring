@@ -36,32 +36,7 @@ Docker Compose로 구성한 서비스는 다음과 같다.
 | nginx         | nginx-sample      | Web Scenario 테스트용 샘플 웹서비스        |
 
 
-## 3. 디렉터리 구조
-
-```text
-.
-├── docker-compose.yml
-├── .env.example
-├── .gitignore
-├── nginx/
-│   └── conf.d/
-│       └── default.conf
-├── zabbix/
-│   ├── agent2/
-│   │   └── scripts/
-│   └── export/
-├── images/
-│   └── screenshots/
-│       ├── week1/
-│       ├── week2/
-│       └── week3/
-├── reports/
-│   └── result-report.md
-└── docs/
-```
-
-
-## 4. 사전 요구사항
+## 3. 사전 요구사항
 
 VM 환경에는 다음 소프트웨어가 필요하다.
 
@@ -75,7 +50,7 @@ VM 환경에는 다음 소프트웨어가 필요하다.
 * curl / wget 기본 포함
 
 
-## 5. 네트워크 및 포트 정책
+## 4. 네트워크 및 포트 정책
 
 본 프로젝트는 Docker Compose에 서비스별 포트 사용 목적을 명시하고, 실제 외부 접근 제어는 Cloud VM의 Security Group에서 수행한다.
 Security Group 인바운드 규칙은 허용 목록 방식으로 관리하며, 명시적으로 허용하지 않은 포트와 출발지는 암시적으로 거부된다.
@@ -95,9 +70,9 @@ Zabbix Server는 Docker 내부 네트워크를 통해 `zabbix-agent2:10050`으�
 nginx 전용 `nginx-agent2`는 `nginx-sample` 컨테이너의 PID namespace를 공유하여 nginx 프로세스 상태를 확인한다.
 
 
-## 6. 설치 및 기동 방법
+## 5. 설치 및 기동 방법
 
-### 6.1 프로젝트 다운로드
+### 5.1 프로젝트 다운로드
 
 GitHub 리포지토리를 VM에 내려받고 프로젝트 디렉터리로 이동한다.
 
@@ -106,7 +81,7 @@ git clone <REPOSITORY_URL>
 cd zabbix-e2e-web-monitoring
 ```
 
-### 6.2 환경 변수 설정
+### 5.2 환경 변수 설정
 
 예시 환경 변수 파일을 복사하여 실제 Docker Compose 실행에 사용할 `.env` 파일을 생성한다.
 
@@ -125,7 +100,7 @@ ZBX_SERVER_HOST=zabbix-server
 PHP_TZ=Asia/Seoul
 ```
 
-### 6.3 서비스 기동
+### 5.3 서비스 기동
 
 프로젝트 루트 디렉터리에서 다음 명령어를 실행한다.
 
@@ -134,9 +109,9 @@ docker compose up -d
 ```
 - 정상 기동 예시
 
-<img src="images/screenshots/week1/screenshot_1_docker_compose_up.png" alt="docker_compose_up_screenshot" width="720">
+<img src="images/screenshots/week1/screenshot_1_docker_compose_up.png" alt="docker_compose_up_screenshot">
 
-### 6.4 컨테이너 상태 확인
+### 5.4 컨테이너 상태 확인
 
 컨테이너 상태를 확인한다.
 
@@ -145,7 +120,7 @@ docker compose ps
 ```
 - 정상 기동 예시
 
-<img src="images/screenshots/week1/screenshot_2_docker_compose_ps.png" alt="docker_compose_ps_screenshot" width="720">
+<img src="images/screenshots/week1/screenshot_2_docker_compose_ps.png" alt="docker_compose_ps_screenshot">
 
 정상 기동 시 다음 컨테이너가 실행된다.
 
@@ -158,7 +133,7 @@ zabbix-server
 zabbix-web
 ```
 
-### 6.5 nginx 샘플 앱 확인
+### 5.5 nginx 샘플 앱 확인
 
 VM 내부에서 nginx 샘플 앱의 주요 경로가 정상 응답하는지 확인한다.
 
@@ -177,7 +152,7 @@ nginx 설정 문법은 다음 명령어로 확인한다.
 docker exec nginx-sample nginx -t
 ```
 
-### 6.6 Zabbix Server에서 nginx 접근 확인
+### 5.6 Zabbix Server에서 nginx 접근 확인
 
 Web Scenario는 Zabbix Web UI가 아니라 `zabbix-server` 컨테이너에서 실행되므로, `zabbix-server` 컨테이너가 Docker 내부 네트워크로 nginx에 접근 가능한지 확인한다.
 
@@ -187,7 +162,7 @@ docker exec zabbix-server sh -c "wget -qO- http://nginx/health"
 docker exec zabbix-server sh -c "wget -qO- http://nginx/status"
 ```
 
-### 6.7 서비스 중지
+### 5.7 서비스 중지
 
 전체 서비스를 중지하려면 다음 명령어를 실행한다.
 
@@ -203,9 +178,9 @@ docker compose down -v
 ```
 
 
-## 7. nginx 샘플 앱
+## 6. nginx 샘플 앱
 
-### 7.1 Web Scenario 대상 엔드포인트
+### 6.1 Web Scenario 대상 엔드포인트
 
 nginx 샘플 웹서비스는 Web Scenario 테스트 대상으로 사용된다.
 
@@ -216,7 +191,7 @@ nginx 샘플 웹서비스는 Web Scenario 테스트 대상으로 사용된다.
 | `/status` | HTTP 200, `status check`     | 상태 페이지 응답 및 응답시간 검증       |
 | `/nginx_status` | nginx stub_status 응답 | Agent2 `system.run[]` 내부 지표 수집 |
 
-### 7.2 zabbix-agent2 system.run 기반 nginx 내부 상태 수집
+### 6.2 zabbix-agent2 system.run 기반 nginx 내부 상태 수집
 
 기존 Web Scenario는 URL 기준의 사용자 관점 가용성 검증에 사용한다.
 추가로 `nginx-agent2`는 `system.run[]` item을 통해 스크립트를 실행하고 nginx 프로세스 및 내부 지표를 수집한다.
@@ -248,7 +223,7 @@ system.run[sh /var/lib/zabbix/user_scripts/nginx_total_requests.sh]
 * `nginx-agent2`는 `nginx-sample`의 PID namespace만 공유하여 프로세스 확인 범위를 nginx 컨테이너로 제한한다.
 
 
-## 8. Zabbix Web UI 접속 및 초기 설정
+## 7. Zabbix Web UI 접속 및 초기 설정
 
 Zabbix Web Frontend는 VM의 8080 포트로 접근한다.
 
@@ -265,7 +240,7 @@ Password: zabbix
 
 최초 로그인 후 관리자 비밀번호를 변경하였다.
 
-### 8.1 Zabbix Server Host 기본 설정
+### 7.1 Zabbix Server Host 기본 설정
 
 기본으로 생성되어 있는 `Zabbix server` Host는 Zabbix 서버 컨테이너와 Agent2 상태를 확인하는 기준 Host로 사용한다.
 
@@ -277,7 +252,7 @@ Password: zabbix
 | Port | `10050` |
 | Connect to | DNS |
 
-### 8.2 nginx-sample Host 등록
+### 7.2 nginx-sample Host 등록
 
 nginx 내부 지표를 수집하기 위해 `nginx-sample` Host를 별도로 등록한다.
 
@@ -294,7 +269,7 @@ nginx 내부 지표를 수집하기 위해 `nginx-sample` Host를 별도로 등�
 
 이 Host는 `nginx-agent2` 컨테이너를 통해 nginx 프로세스 및 `/nginx_status` 내부 지표를 수집한다.
 
-### 8.3 nginx 내부 지표 Item 등록
+### 7.3 nginx 내부 지표 Item 등록
 
 `nginx-sample` Host의 `Items`에서 다음 Zabbix agent 타입 Item을 생성한다.
 
@@ -304,7 +279,7 @@ nginx 내부 지표를 수집하기 위해 `nginx-sample` Host를 별도로 등�
 | nginx active connections | `system.run[sh /var/lib/zabbix/user_scripts/nginx_active_connections.sh]` | Numeric unsigned | `1m` |
 | nginx total requests | `system.run[sh /var/lib/zabbix/user_scripts/nginx_total_requests.sh]` | Numeric unsigned | `1m` |
 
-### 8.4 Web Scenario 등록
+### 7.4 Web Scenario 등록
 
 nginx Web Scenario는 `Zabbix server` Host 아래에 등록한다.
 
@@ -327,7 +302,7 @@ Scenario Step은 다음과 같이 구성한다.
 
 Web Scenario는 Zabbix Web UI가 아니라 `zabbix-server` 컨테이너에서 실행되므로, URL은 외부 IP가 아닌 Docker 내부 서비스명 `nginx`를 사용한다.
 
-### 8.5 Trigger 등록
+### 7.5 Trigger 등록
 
 Web Scenario 기반 Trigger는 `Zabbix server` Host에 등록한다.
 
@@ -344,11 +319,11 @@ nginx 내부 지표 기반 Trigger는 `nginx-sample` Host에 등록한다.
 | `nginx active connections is high` | Warning | `last(/nginx-sample/system.run[sh /var/lib/zabbix/user_scripts/nginx_active_connections.sh])>50` | nginx active connection 과다 감지 |
 | `nginx request counter reset detected` | Warning | `change(/nginx-sample/system.run[sh /var/lib/zabbix/user_scripts/nginx_total_requests.sh])<0` | nginx 재시작 또는 request counter 초기화 감지 |
 
-### 8.6 알람 발송 설정
+### 7.6 알람 발송 설정
 
 알람은 Email Media type, 사용자 Media, Trigger Action 순서로 설정한다.
 
-#### 8.6.1 Email Media type 설정
+#### 7.6.1 Email Media type 설정
 
 `Alerts` > `Media types` > `Email`에서 SMTP 정보를 설정한다.
 
@@ -363,7 +338,7 @@ nginx 내부 지표 기반 Trigger는 `nginx-sample` Host에 등록한다.
 
 설정 후 `Test` 버튼으로 메일 발송이 성공하는지 확인한다.
 
-#### 8.6.2 사용자 Media 등록
+#### 7.6.2 사용자 Media 등록
 
 `Users` > `Users` > `Admin` > `Media`에서 수신자를 등록한다.
 
@@ -375,24 +350,30 @@ nginx 내부 지표 기반 Trigger는 `nginx-sample` Host에 등록한다.
 | Use if severity | `Warning`, `High` 포함 |
 | Enabled | 체크 |
 
-#### 8.6.3 Trigger Action 등록
+#### 7.6.3 Trigger Action 등록
 
 `Alerts` > `Actions` > `Trigger actions`에서 Web Scenario용 Action과 nginx 내부 지표용 Action을 분리하여 등록한다.
 
-Web Scenario Action 조건:
+Web Scenario 장애 알림 Action:
 
-```text
-Host equals Zabbix server
-Trigger name contains Nginx
-Trigger severity >= Warning
-```
+| 항목 | 값 |
+| --- | --- |
+| Name | `Notify nginx web scenario problem` |
+| Type of calculation | `And/Or` |
+| Condition A | `Trigger equals Zabbix server: Nginx web scenario failed` |
+| Condition B | `Trigger equals Zabbix server: Nginx status response time is too high` |
+| Condition C | `Trigger equals Zabbix server: Nginx health response code is not 200` |
+| Enabled | checked |
 
-nginx 내부 지표 Action 조건:
+nginx 내부 지표 장애 알림 Action:
 
-```text
-Host equals nginx-sample
-Trigger severity >= Warning
-```
+| 항목 | 값 |
+| --- | --- |
+| Name | `Notify nginx internal trigger problems` |
+| Type of calculation | `And/Or` |
+| Condition A | `Trigger equals nginx-sample: nginx active connections is high` |
+| Condition B | `Trigger equals nginx-sample: nginx request counter reset detected` |
+| Enabled | checked |
 
 각 Action의 `Operations`에는 장애 발생 메일을 등록한다.
 
@@ -413,13 +394,13 @@ Send only to: Email
 알람 설정 후 장애 테스트를 수행하고 `Reports` > `Action log`에서 메일 발송 결과가 `Sent`로 기록되는지 확인한다.
 
 
-## 9. 장애 테스트 방법
+## 8. 장애 테스트 방법
 
 장애 테스트는 Trigger가 `PROBLEM`으로 전환되는지, 복구 후 `RESOLVED`로 전환되는지, 그리고 Email Action이 정상 발송되는지 확인하는 절차이다.
 
 장애 발생 후에는 `Monitoring` > `Problems`에서 Problem 상태를 확인하고, `Reports` > `Action log`에서 메일 발송 결과가 `Sent`로 기록되는지 확인한다.
 
-### 9.1 Web Scenario 실패 테스트
+### 8.1 Web Scenario 실패 테스트
 
 nginx 컨테이너를 중지하여 Web Scenario의 모든 Step이 nginx에 접근하지 못하도록 만든다.
 
@@ -432,8 +413,6 @@ docker stop nginx-sample
 * `nginx-web-availability` Web Scenario가 실패한다.
 * `Nginx web scenario failed` Trigger가 `PROBLEM` 상태로 전환된다.
 * 장애 알림 메일이 수신된다.
-
-증빙 스크린샷:
 
 <img src="images/screenshots/week2/web_scenario_stop_nginx.png" alt="web_scenario_stop_nginx" width="720">
 <img src="images/screenshots/week2/web_scenario_failed_problem.png" alt="web_scenario_failed_problem" width="720">
@@ -451,12 +430,10 @@ docker start nginx-sample
 * Trigger가 `RESOLVED` 상태로 전환된다.
 * 복구 알림 메일이 수신된다.
 
-증빙 스크린샷:
-
 <img src="images/screenshots/week2/web_scenario_recovered_problem.png" alt="web_scenario_recovered_problem" width="720">
 <img src="images/screenshots/week2/web_scenario_recovered_mail.png" alt="web_scenario_recovered_mail" width="720">
 
-### 9.2 `/status` 응답시간 초과 테스트
+### 8.2 `/status` 응답시간 초과 테스트
 
 `/status` 응답이 3초를 초과하도록 nginx 설정을 임시로 변경한다. 테스트 전 원본 설정을 백업한다.
 
@@ -486,8 +463,6 @@ docker exec nginx-sample nginx -s reload
 * `Nginx status response time is too high` Trigger가 `PROBLEM` 상태로 전환된다.
 * Warning 알림 메일이 수신된다.
 
-증빙 스크린샷:
-
 <img src="images/screenshots/week2/status_response_time_problem.png" alt="status_response_time_problem" width="720">
 <img src="images/screenshots/week2/status_response_time_mail.png" alt="status_response_time_mail" width="720">
 
@@ -504,12 +479,10 @@ docker exec nginx-sample nginx -s reload
 * Trigger가 `RESOLVED` 상태로 전환된다.
 * 복구 알림 메일이 수신된다.
 
-증빙 스크린샷:
-
 <img src="images/screenshots/week2/status_response_time_recovered.png" alt="status_response_time_recovered" width="720">
 <img src="images/screenshots/week2/status_response_time_recovered_mail.png" alt="status_response_time_recovered_mail" width="720">
 
-### 9.3 `/health` 응답 코드 비정상 테스트
+### 8.3 `/health` 응답 코드 비정상 테스트
 
 `/health` 응답 코드가 `200`이 아니도록 nginx 설정을 임시로 변경한다. 테스트 전 원본 설정을 백업한다.
 
@@ -538,8 +511,6 @@ docker exec nginx-sample nginx -s reload
 * `Nginx health response code is not 200` Trigger가 `PROBLEM` 상태로 전환된다.
 * High 알림 메일이 수신된다.
 
-증빙 스크린샷:
-
 <img src="images/screenshots/week2/health_response_code_problem.png" alt="health_response_code_problem" width="720">
 <img src="images/screenshots/week2/health_response_code_mail.png" alt="health_response_code_mail" width="720">
 
@@ -556,12 +527,10 @@ docker exec nginx-sample nginx -s reload
 * Trigger가 `RESOLVED` 상태로 전환된다.
 * 복구 알림 메일이 수신된다.
 
-증빙 스크린샷:
-
 <img src="images/screenshots/week2/health_response_code_recovered.png" alt="health_response_code_recovered" width="720">
 <img src="images/screenshots/week2/health_response_code_recovered_mail.png" alt="health_response_code_recovered_mail" width="720">
 
-### 9.4 nginx active connections 증가 테스트
+### 8.4 nginx active connections 증가 테스트
 
 active connection 수가 50을 초과하도록 nginx에 임시 slow endpoint를 추가한다. 테스트 전 원본 설정을 백업한다.
 
@@ -597,8 +566,6 @@ docker exec zabbix-server sh -c 'for i in $(seq 1 60); do wget -qO- http://nginx
 * `nginx active connections is high` Trigger가 `PROBLEM` 상태로 전환된다.
 * Warning 알림 메일이 수신된다.
 
-증빙 스크린샷:
-
 <img src="images/screenshots/week2/active_connections_problem.png" alt="active_connections_problem" width="720">
 <img src="images/screenshots/week2/active_connections_mail.png" alt="active_connections_mail" width="720">
 
@@ -617,12 +584,10 @@ docker exec nginx-sample nginx -s reload
 * Trigger가 `RESOLVED` 상태로 전환된다.
 * 복구 알림 메일이 수신된다.
 
-증빙 스크린샷:
-
 <img src="images/screenshots/week2/active_connections_recovered.png" alt="active_connections_recovered" width="720">
 <img src="images/screenshots/week2/active_connections_recovered_mail.png" alt="active_connections_recovered_mail" width="720">
 
-### 9.5 nginx request counter reset 테스트
+### 8.5 nginx request counter reset 테스트
 
 먼저 nginx request counter가 증가하도록 여러 번 요청을 발생시킨다.
 
@@ -643,8 +608,6 @@ docker restart nginx-sample
 * `nginx request counter reset detected` Trigger가 `PROBLEM` 상태로 전환된다.
 * Warning 알림 메일이 수신된다.
 
-증빙 스크린샷:
-
 <img src="images/screenshots/week2/request_counter_before_restart.png" alt="request_counter_before_restart" width="720">
 <img src="images/screenshots/week2/request_counter_reset_problem.png" alt="request_counter_reset_problem" width="720">
 <img src="images/screenshots/week2/request_counter_reset_mail.png" alt="request_counter_reset_mail" width="720">
@@ -664,14 +627,12 @@ docker exec zabbix-server sh -c 'wget -qO- http://nginx/status >/dev/null'
 * Trigger가 `RESOLVED` 상태로 전환된다.
 * 복구 알림 메일이 수신된다.
 
-증빙 스크린샷:
-
 <img src="images/screenshots/week2/request_counter_reset_recovered.png" alt="request_counter_reset_recovered" width="720">
 <img src="images/screenshots/week2/request_counter_reset_recovered_mail.png" alt="request_counter_reset_recovered_mail" width="720">
 
 
-## 10. 트러블슈팅
-### 10.1 Zabbix Agent2 Not Available
+## 9. 트러블슈팅
+### 9.1 Zabbix Agent2 Not Available
 
 * 증상: Zabbix UI에서 `Zabbix agent is not available` 문제 발생
 * 원인: Zabbix Host의 Agent Interface가 Docker 내부 Agent2 컨테이너 주소와 일치하지 않음
@@ -680,7 +641,7 @@ docker exec zabbix-server sh -c 'wget -qO- http://nginx/status >/dev/null'
   * `docker-compose.yml`에서 `ZBX_HOSTNAME`을 `Zabbix server`로 설정
   * Zabbix UI에서 `Zabbix server` Host의 Agent Interface를 DNS `zabbix-agent2`, Port `10050`으로 수정
 
-### 10.2 Action Log: No media defined for user
+### 9.2 Action Log: No media defined for user
 
 * 증상:
 
