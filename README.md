@@ -317,7 +317,7 @@ nginx 내부 지표 기반 Trigger는 `nginx-sample` Host에 등록한다.
 | Trigger name | Severity | Expression | 목적 |
 | --- | --- | --- | --- |
 | `nginx active connections is high` | Warning | `last(/nginx-sample/system.run[sh /var/lib/zabbix/user_scripts/nginx_active_connections.sh])>50` | nginx active connection 과다 감지 |
-| `nginx request counter reset detected` | Warning | `change(/nginx-sample/system.run[sh /var/lib/zabbix/user_scripts/nginx_total_requests.sh])<0` | nginx 재시작 또는 request counter 초기화 감지 |
+| `nginx request counter reset detected` | Information | `change(/nginx-sample/system.run[sh /var/lib/zabbix/user_scripts/nginx_total_requests.sh])<0` | nginx 재시작 또는 request counter 초기화 감지 |
 
 ### 7.6 알람 발송 설정
 
@@ -347,7 +347,7 @@ nginx 내부 지표 기반 Trigger는 `nginx-sample` Host에 등록한다.
 | Type | `Email` |
 | Send to | 알림을 받을 이메일 주소 |
 | When active | `1-7,00:00-24:00` |
-| Use if severity | `Warning`, `High` 포함 |
+| Use if severity | 전부 체크 |
 | Enabled | 체크 |
 
 #### 7.6.3 Trigger Action 등록
@@ -606,7 +606,7 @@ docker restart nginx-sample
 * nginx `stub_status`의 누적 request counter가 초기화된다.
 * 이전 수집값보다 최신 수집값이 작아진다.
 * `nginx request counter reset detected` Trigger가 `PROBLEM` 상태로 전환된다.
-* Warning 알림 메일이 수신된다.
+* Information 알림 메일이 수신된다.
 
 <img src="images/screenshots/week2/request_counter_before_restart.png" alt="request_counter_before_restart" width="720">
 <img src="images/screenshots/week2/request_counter_reset_problem.png" alt="request_counter_reset_problem" width="720">
@@ -663,13 +663,3 @@ No media defined for user
   * `Users` > `Users` > `Admin` > `Media`에서 Email Media를 추가
   * 수신 이메일 주소, 활성 시간, Severity 조건을 설정
   * Action을 저장한 뒤 기존 Problem이 아니라 새로운 Problem 이벤트를 발생시켜 다시 테스트
-
-사용자 Media 설정:
-
-```text
-Type: Email
-Send to: <RECEIVER_EMAIL>
-When active: 1-7,00:00-24:00
-Use if severity: Warning, High
-Enabled: checked
-```
