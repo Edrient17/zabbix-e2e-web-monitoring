@@ -441,8 +441,10 @@ docker start nginx-sample
 
 <details>
 <summary>복구 스크린샷 보기</summary>
+<img src="images/screenshots/week2/scenario_1/web_scenario_start_nginx.png" alt="web_scenario_recovered_problem" width="600">
 
-<img src="images/screenshots/week2/scenario_1/web_scenario_recovered_problem.png" alt="web_scenario_recovered_problem" width="600">
+
+<img src="images/screenshots/week2/scenario_1/web_scenario_recovered_problem.png" alt="web_scenario_recovered_problem" width="720">
 
 <img src="images/screenshots/week2/scenario_1/web_scenario_recovered_mail.png" alt="web_scenario_recovered_mail" width="400">
 
@@ -616,8 +618,9 @@ docker exec zabbix-server sh -c 'for i in $(seq 1 60); do wget -qO- http://nginx
 <details>
 <summary>장애 발생 스크린샷 보기</summary>
 
-<img src="images/screenshots/week2/active_connections_problem.png" alt="active_connections_problem" width="720">
-<img src="images/screenshots/week2/active_connections_mail.png" alt="active_connections_mail" width="720">
+<img src="images/screenshots/week2/scenario_4/active_connections_problem.png" alt="active_connections_problem" width="600">
+
+<img src="images/screenshots/week2/scenario_4/active_connections_mail.png" alt="active_connections_mail" width="400">
 
 </details>
 
@@ -639,8 +642,9 @@ docker exec nginx-sample nginx -s reload
 <details>
 <summary>복구 스크린샷 보기</summary>
 
-<img src="images/screenshots/week2/active_connections_recovered.png" alt="active_connections_recovered" width="720">
-<img src="images/screenshots/week2/active_connections_recovered_mail.png" alt="active_connections_recovered_mail" width="720">
+<img src="images/screenshots/week2/scenario_4/active_connections_recovered.png" alt="active_connections_recovered" width="600">
+
+<img src="images/screenshots/week2/scenario_4/active_connections_recovered_mail.png" alt="active_connections_recovered_mail" width="400">
 
 </details>
 
@@ -668,9 +672,9 @@ docker restart nginx-sample
 <details>
 <summary>장애 발생 스크린샷 보기</summary>
 
-<img src="images/screenshots/week2/request_counter_before_restart.png" alt="request_counter_before_restart" width="720">
-<img src="images/screenshots/week2/request_counter_reset_problem.png" alt="request_counter_reset_problem" width="720">
-<img src="images/screenshots/week2/request_counter_reset_mail.png" alt="request_counter_reset_mail" width="720">
+<img src="images/screenshots/week2/scenario_5/request_counter_reset_problem.png" alt="request_counter_reset_problem" width="600">
+
+<img src="images/screenshots/week2/scenario_5/request_counter_reset_mail.png" alt="request_counter_reset_mail" width="400">
 
 </details>
 
@@ -692,8 +696,9 @@ docker exec zabbix-server sh -c 'wget -qO- http://nginx/status >/dev/null'
 <details>
 <summary>복구 스크린샷 보기</summary>
 
-<img src="images/screenshots/week2/request_counter_reset_recovered.png" alt="request_counter_reset_recovered" width="720">
-<img src="images/screenshots/week2/request_counter_reset_recovered_mail.png" alt="request_counter_reset_recovered_mail" width="720">
+<img src="images/screenshots/week2/scenario_5/request_counter_reset_recovered.png" alt="request_counter_reset_recovered" width="600">
+
+<img src="images/screenshots/week2/scenario_5/request_counter_reset_recovered_mail.png" alt="request_counter_reset_recovered_mail" width="400">
 
 </details>
 
