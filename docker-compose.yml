@@ -63,6 +63,7 @@ services:
   zabbix-agent2:
     image: zabbix/zabbix-agent2:alpine-7.0.27
     container_name: zabbix-agent2
+    hostname: zabbix-agent2
     restart: unless-stopped
     environment:
       ZBX_HOSTNAME: Zabbix server
@@ -77,6 +78,7 @@ services:
   nginx-agent2:
     image: zabbix/zabbix-agent2:alpine-7.0.27
     container_name: nginx-agent2
+    hostname: nginx-agent2
     restart: unless-stopped
     pid: "container:nginx-sample"
     environment:
