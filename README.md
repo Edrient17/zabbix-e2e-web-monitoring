@@ -300,6 +300,8 @@ Scenario Step은 다음과 같이 구성한다.
 | 2 | `health` | `http://nginx/health` | `200` | `OK` |
 | 3 | `status` | `http://nginx/status` | `200` | `status check` |
 
+`/status` 응답시간 초과 테스트를 위해 `status` Step의 Timeout은 `10s` 또는 `15s` 정도로 설정한다. Timeout이 너무 짧으면 응답시간 초과가 아니라 Step 실패로 처리되어 `Nginx web scenario failed` Trigger가 발생할 수 있다.
+
 Web Scenario는 Zabbix Web UI가 아니라 `zabbix-server` 컨테이너에서 실행되므로, URL은 외부 IP가 아닌 Docker 내부 서비스명 `nginx`를 사용한다.
 
 ### 7.5 Trigger 등록
@@ -414,9 +416,16 @@ docker stop nginx-sample
 * `Nginx web scenario failed` Trigger가 `PROBLEM` 상태로 전환된다.
 * 장애 알림 메일이 수신된다.
 
-<img src="images/screenshots/week2/web_scenario_stop_nginx.png" alt="web_scenario_stop_nginx" width="720">
-<img src="images/screenshots/week2/web_scenario_failed_problem.png" alt="web_scenario_failed_problem" width="720">
-<img src="images/screenshots/week2/web_scenario_failed_mail.png" alt="web_scenario_failed_mail" width="720">
+<details>
+<summary>장애 발생 스크린샷 보기</summary>
+
+<img src="images/screenshots/week2/scenario_1/web_scenario_stop_nginx.png" alt="web_scenario_stop_nginx" width="600">
+
+<img src="images/screenshots/week2/scenario_1/web_scenario_failed_problem.png" alt="web_scenario_failed_problem" width="720">
+
+<img src="images/screenshots/week2/scenario_1/web_scenario_failed_mail.png" alt="web_scenario_failed_mail" width="400">
+
+</details>
 
 복구:
 
@@ -430,8 +439,14 @@ docker start nginx-sample
 * Trigger가 `RESOLVED` 상태로 전환된다.
 * 복구 알림 메일이 수신된다.
 
-<img src="images/screenshots/week2/web_scenario_recovered_problem.png" alt="web_scenario_recovered_problem" width="720">
-<img src="images/screenshots/week2/web_scenario_recovered_mail.png" alt="web_scenario_recovered_mail" width="720">
+<details>
+<summary>복구 스크린샷 보기</summary>
+
+<img src="images/screenshots/week2/scenario_1/web_scenario_recovered_problem.png" alt="web_scenario_recovered_problem" width="600">
+
+<img src="images/screenshots/week2/scenario_1/web_scenario_recovered_mail.png" alt="web_scenario_recovered_mail" width="400">
+
+</details>
 
 ### 8.2 `/status` 응답시간 초과 테스트
 
@@ -441,12 +456,14 @@ docker start nginx-sample
 cp nginx/conf.d/default.conf nginx/conf.d/default.conf.bak
 ```
 
+이 테스트는 `/status` Step이 실패하는 것이 아니라, HTTP 200 응답은 정상적으로 받되 응답시간만 3초를 초과하는지 확인하는 테스트이다. Web Scenario의 `status` Step Timeout은 `10s` 또는 `15s` 정도로 설정하고, nginx의 지연도 Timeout을 넘지 않도록 조정한다.
+
 `nginx/conf.d/default.conf`의 `/status` location을 테스트용으로 변경한다.
 
 ```nginx
 location /status {
     default_type text/plain;
-    limit_rate 1;
+    limit_rate 20;
     return 200 "status check slow response test data data data data data data data data data data\n";
 }
 ```
@@ -461,10 +478,17 @@ docker exec nginx-sample nginx -s reload
 
 * Web Scenario의 `status` Step 응답시간이 3초를 초과한다.
 * `Nginx status response time is too high` Trigger가 `PROBLEM` 상태로 전환된다.
+* `Nginx web scenario failed` Trigger는 발생하지 않는다.
 * Warning 알림 메일이 수신된다.
 
-<img src="images/screenshots/week2/status_response_time_problem.png" alt="status_response_time_problem" width="720">
-<img src="images/screenshots/week2/status_response_time_mail.png" alt="status_response_time_mail" width="720">
+<details>
+<summary>장애 발생 스크린샷 보기</summary>
+
+<img src="images/screenshots/week2/scenario_2/status_response_time_problem.png" alt="status_response_time_problem" width="600">
+
+<img src="images/screenshots/week2/scenario_2/status_response_time_mail.png" alt="status_response_time_mail" width="400">
+
+</details>
 
 복구:
 
@@ -479,8 +503,14 @@ docker exec nginx-sample nginx -s reload
 * Trigger가 `RESOLVED` 상태로 전환된다.
 * 복구 알림 메일이 수신된다.
 
-<img src="images/screenshots/week2/status_response_time_recovered.png" alt="status_response_time_recovered" width="720">
-<img src="images/screenshots/week2/status_response_time_recovered_mail.png" alt="status_response_time_recovered_mail" width="720">
+<details>
+<summary>복구 스크린샷 보기</summary>
+
+<img src="images/screenshots/week2/scenario_2/status_response_time_recovered.png" alt="status_response_time_recovered" width="600">
+
+<img src="images/screenshots/week2/scenario_2/status_response_time_recovered_mail.png" alt="status_response_time_recovered_mail" width="400">
+
+</details>
 
 ### 8.3 `/health` 응답 코드 비정상 테스트
 
@@ -511,8 +541,14 @@ docker exec nginx-sample nginx -s reload
 * `Nginx health response code is not 200` Trigger가 `PROBLEM` 상태로 전환된다.
 * High 알림 메일이 수신된다.
 
-<img src="images/screenshots/week2/health_response_code_problem.png" alt="health_response_code_problem" width="720">
-<img src="images/screenshots/week2/health_response_code_mail.png" alt="health_response_code_mail" width="720">
+<details>
+<summary>장애 발생 스크린샷 보기</summary>
+
+<img src="images/screenshots/week2/scenario_3/health_response_code_problem.png" alt="health_response_code_problem" width="600">
+
+<img src="images/screenshots/week2/scenario_3/health_response_code_mail.png" alt="health_response_code_mail" width="400">
+
+</details>
 
 복구:
 
@@ -527,8 +563,14 @@ docker exec nginx-sample nginx -s reload
 * Trigger가 `RESOLVED` 상태로 전환된다.
 * 복구 알림 메일이 수신된다.
 
-<img src="images/screenshots/week2/health_response_code_recovered.png" alt="health_response_code_recovered" width="720">
-<img src="images/screenshots/week2/health_response_code_recovered_mail.png" alt="health_response_code_recovered_mail" width="720">
+<details>
+<summary>복구 스크린샷 보기</summary>
+
+<img src="images/screenshots/week2/scenario_3/health_response_code_recovered.png" alt="health_response_code_recovered" width="600">
+
+<img src="images/screenshots/week2/scenario_3/health_response_code_recovered_mail.png" alt="health_response_code_recovered_mail" width="400">
+
+</details>
 
 ### 8.4 nginx active connections 증가 테스트
 
@@ -566,8 +608,13 @@ docker exec zabbix-server sh -c 'for i in $(seq 1 60); do wget -qO- http://nginx
 * `nginx active connections is high` Trigger가 `PROBLEM` 상태로 전환된다.
 * Warning 알림 메일이 수신된다.
 
+<details>
+<summary>장애 발생 스크린샷 보기</summary>
+
 <img src="images/screenshots/week2/active_connections_problem.png" alt="active_connections_problem" width="720">
 <img src="images/screenshots/week2/active_connections_mail.png" alt="active_connections_mail" width="720">
+
+</details>
 
 복구:
 
@@ -584,8 +631,13 @@ docker exec nginx-sample nginx -s reload
 * Trigger가 `RESOLVED` 상태로 전환된다.
 * 복구 알림 메일이 수신된다.
 
+<details>
+<summary>복구 스크린샷 보기</summary>
+
 <img src="images/screenshots/week2/active_connections_recovered.png" alt="active_connections_recovered" width="720">
 <img src="images/screenshots/week2/active_connections_recovered_mail.png" alt="active_connections_recovered_mail" width="720">
+
+</details>
 
 ### 8.5 nginx request counter reset 테스트
 
@@ -608,9 +660,14 @@ docker restart nginx-sample
 * `nginx request counter reset detected` Trigger가 `PROBLEM` 상태로 전환된다.
 * Information 알림 메일이 수신된다.
 
+<details>
+<summary>장애 발생 스크린샷 보기</summary>
+
 <img src="images/screenshots/week2/request_counter_before_restart.png" alt="request_counter_before_restart" width="720">
 <img src="images/screenshots/week2/request_counter_reset_problem.png" alt="request_counter_reset_problem" width="720">
 <img src="images/screenshots/week2/request_counter_reset_mail.png" alt="request_counter_reset_mail" width="720">
+
+</details>
 
 복구:
 
@@ -627,8 +684,13 @@ docker exec zabbix-server sh -c 'wget -qO- http://nginx/status >/dev/null'
 * Trigger가 `RESOLVED` 상태로 전환된다.
 * 복구 알림 메일이 수신된다.
 
+<details>
+<summary>복구 스크린샷 보기</summary>
+
 <img src="images/screenshots/week2/request_counter_reset_recovered.png" alt="request_counter_reset_recovered" width="720">
 <img src="images/screenshots/week2/request_counter_reset_recovered_mail.png" alt="request_counter_reset_recovered_mail" width="720">
+
+</details>
 
 
 ## 9. 트러블슈팅
