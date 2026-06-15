@@ -144,7 +144,7 @@ curl -i http://127.0.0.1/status
 ```
 - 정상 기동 예시
 
-<img src="images/screenshots/week1/screenshot_3_nginx_sample_test.png" alt="nginx_sample_screenshot" width="720">
+<img src="images/screenshots/week1/screenshot_3_nginx_sample_test.png" alt="nginx_sample_screenshot" width="500">
 
 nginx 설정 문법은 다음 명령어로 확인한다.
 
@@ -186,7 +186,7 @@ nginx 샘플 웹서비스는 Web Scenario 테스트 대상으로 사용된다.
 
 | 경로        | 기대 응답                        | 검증 목적                     |
 | --------- | ---------------------------- | ------------------------- |
-| `/`       | HTTP 200, `Welcome to nginx` | 메인 페이지 Required String 검증 |
+| `/`       | HTTP 200, `Welcome to nginx` | 메인 페이지 응답 확인 |
 | `/health` | HTTP 200, `OK`               | 상태 확인 엔드포인트 검증            |
 | `/status` | HTTP 200, `status check`     | 상태 페이지 응답 및 응답시간 검증       |
 | `/nginx_status` | nginx stub_status 응답 | Agent2 `system.run[]` 내부 지표 수집 |
@@ -296,7 +296,7 @@ Scenario Step은 다음과 같이 구성한다.
 
 | Step | Name | URL | Required status codes | Required string |
 | --- | --- | --- | --- | --- |
-| 1 | `main` | `http://nginx/` | `200` | `Welcome to nginx` |
+| 1 | `root` | `http://nginx/` | `200` | `Welcome to nginx` |
 | 2 | `health` | `http://nginx/health` | `200` | `OK` |
 | 3 | `status` | `http://nginx/status` | `200` | `status check` |
 
@@ -310,9 +310,9 @@ Web Scenario 기반 Trigger는 `Zabbix server` Host에 등록한다.
 
 | Trigger name | Severity | Expression | 목적 |
 | --- | --- | --- | --- |
-| `Nginx web scenario failed` | High | `last(/Zabbix server/web.test.fail[nginx-web-availability])>0` | Web Scenario Step 실패 감지 |
+| `Nginx web scenario failed` | High | `last(/Zabbix server/web.test.fail[nginx-web-availability])>0` | nginx 중지, endpoint 접근 불가, timeout, 상태 코드 불일치, Required string 불일치 등 Web Scenario Step 실패 감지 |
+| `Nginx endpoint response code is not 200` | High | `last(/Zabbix server/web.test.rspcode[nginx-web-availability,root])<>200 or last(/Zabbix server/web.test.rspcode[nginx-web-availability,health])<>200 or last(/Zabbix server/web.test.rspcode[nginx-web-availability,status])<>200` | `root`, `health`, `status` 중 하나라도 HTTP 200이 아닌 경우 감지 |
 | `Nginx status response time is too high` | Warning | `last(/Zabbix server/web.test.time[nginx-web-availability,status,resp])>3` | `/status` 응답시간 3초 초과 감지 |
-| `Nginx health response code is not 200` | High | `last(/Zabbix server/web.test.rspcode[nginx-web-availability,health])<>200` | `/health` 응답 코드 비정상 감지 |
 
 nginx 내부 지표 기반 Trigger는 `nginx-sample` Host에 등록한다.
 
@@ -364,7 +364,7 @@ Web Scenario 장애 알림 Action:
 | Type of calculation | `And/Or` |
 | Condition A | `Trigger equals Zabbix server: Nginx web scenario failed` |
 | Condition B | `Trigger equals Zabbix server: Nginx status response time is too high` |
-| Condition C | `Trigger equals Zabbix server: Nginx health response code is not 200` |
+| Condition C | `Trigger equals Zabbix server: Nginx endpoint response code is not 200` |
 | Enabled | checked |
 
 nginx 내부 지표 장애 알림 Action:
@@ -538,15 +538,18 @@ docker exec nginx-sample nginx -s reload
 기대 결과:
 
 * Web Scenario의 `health` Step에서 HTTP 응답 코드 `500`이 수집된다.
-* `Nginx health response code is not 200` Trigger가 `PROBLEM` 상태로 전환된다.
-* High 알림 메일이 수신된다.
+* `Nginx web scenario failed` Trigger가 `PROBLEM` 상태로 전환된다.
+* `Nginx endpoint response code is not 200` Trigger가 `PROBLEM` 상태로 전환된다.
+* 각 Trigger에 대한 High 알림 메일이 수신된다.
 
 <details>
 <summary>장애 발생 스크린샷 보기</summary>
 
 <img src="images/screenshots/week2/scenario_3/health_response_code_problem.png" alt="health_response_code_problem" width="600">
 
-<img src="images/screenshots/week2/scenario_3/health_response_code_mail.png" alt="health_response_code_mail" width="400">
+<img src="images/screenshots/week2/scenario_3/health_response_code_mail_1.png" alt="health_response_code_mail" width="400">
+
+<img src="images/screenshots/week2/scenario_3/health_response_code_mail_2.png" alt="health_response_code_mail" width="400">
 
 </details>
 
@@ -568,7 +571,9 @@ docker exec nginx-sample nginx -s reload
 
 <img src="images/screenshots/week2/scenario_3/health_response_code_recovered.png" alt="health_response_code_recovered" width="600">
 
-<img src="images/screenshots/week2/scenario_3/health_response_code_recovered_mail.png" alt="health_response_code_recovered_mail" width="400">
+<img src="images/screenshots/week2/scenario_3/health_response_code_recovered_mail_1.png" alt="health_response_code_recovered_mail" width="400">
+
+<img src="images/screenshots/week2/scenario_3/health_response_code_recovered_mail_2.png" alt="health_response_code_recovered_mail" width="400">
 
 </details>
 
