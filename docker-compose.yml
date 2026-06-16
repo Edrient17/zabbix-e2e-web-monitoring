@@ -30,12 +30,27 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
       ZBX_SERVER_NAME: ${ZBX_SERVER_NAME}
+      ZBX_WEBDRIVERURL: http://selenium-chrome:4444
+      ZBX_STARTBROWSERPOLLERS: 2
       TZ: ${PHP_TZ}
     depends_on:
       postgresql:
         condition: service_healthy
+      selenium-chrome:
+        condition: service_started
     expose:
       - "10051"
+    networks:
+      - zabbix-net
+
+  # Selenium WebDriver endpoint for Zabbix Browser Items
+  selenium-chrome:
+    image: selenium/standalone-chrome:4.21.0
+    container_name: selenium-chrome
+    restart: unless-stopped
+    shm_size: "2gb"
+    expose:
+      - "4444"
     networks:
       - zabbix-net
 
