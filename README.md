@@ -330,6 +330,7 @@ nginx Web Scenario는 `Zabbix server` Host 아래에 등록한다.
 | Update interval | `1m` |
 | Attempts | `1` |
 | Agent | `Zabbix` |
+| Headers | `User-Agent: Zabbix-WebScenario/1.0` |
 
 Scenario Step은 다음과 같이 구성한다.
 
