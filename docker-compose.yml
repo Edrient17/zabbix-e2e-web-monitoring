@@ -51,6 +51,8 @@ services:
     shm_size: "2gb"
     expose:
       - "4444"
+    volumes:
+      - ./zabbix/browser-files:/opt/zabbix/browser-files:ro
     networks:
       - zabbix-net
 
