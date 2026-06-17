@@ -1,0 +1,1382 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<zabbix_export>
+    <version>7.0</version>
+    <host_groups>
+        <host_group>
+            <uuid>a571c0d144b14fd4a87a9d9b2aa9fcd6</uuid>
+            <name>Applications</name>
+        </host_group>
+    </host_groups>
+    <hosts>
+        <host>
+            <host>midibus-web</host>
+            <name>midibus-web</name>
+            <groups>
+                <group>
+                    <name>Applications</name>
+                </group>
+            </groups>
+            <items>
+                <item>
+                    <name>Midibus browser category/channel execution message</name>
+                    <type>DEPENDENT</type>
+                    <key>midibus.browser.category_channel.execution.message</key>
+                    <delay>0</delay>
+                    <history>7d</history>
+                    <value_type>TEXT</value_type>
+                    <trends>0</trends>
+                    <preprocessing>
+                        <step>
+                            <type>JAVASCRIPT</type>
+                            <parameters>
+                                <parameter>var data = JSON.parse(value);
+
+if (data.error &amp;&amp; data.error.message) {
+    return &quot;category_channel: &quot; + data.error.message;
+}
+
+return &quot;&quot;;</parameter>
+                            </parameters>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>midibus_browser_category_channel</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>Midibus browser category/channel execution status</name>
+                    <type>DEPENDENT</type>
+                    <key>midibus.browser.category_channel.execution.status</key>
+                    <delay>0</delay>
+                    <history>7d</history>
+                    <preprocessing>
+                        <step>
+                            <type>JAVASCRIPT</type>
+                            <parameters>
+                                <parameter>var data = JSON.parse(value);
+
+if (data.error &amp;&amp; data.error.message) {
+    return 0;
+}
+
+return 1;</parameter>
+                            </parameters>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>midibus_browser_category_channel</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>Midibus browser category/channel validation status</name>
+                    <type>DEPENDENT</type>
+                    <key>midibus.browser.category_channel.validation.status</key>
+                    <delay>0</delay>
+                    <history>7d</history>
+                    <preprocessing>
+                        <step>
+                            <type>JAVASCRIPT</type>
+                            <parameters>
+                                <parameter>var data = JSON.parse(value);
+
+if (data.error &amp;&amp; data.error.message) {
+    return 1;
+}
+
+var expectedMark = &quot;save channel config&quot;;
+
+var marks = [];
+
+if (data.performance_data &amp;&amp; data.performance_data.marks) {
+    marks = data.performance_data.marks;
+}
+
+if (
+    data.performance_data &amp;&amp;
+    data.performance_data.details &amp;&amp;
+    data.performance_data.details.marks
+) {
+    marks = data.performance_data.details.marks;
+}
+
+for (var i = 0; i &lt; marks.length; i++) {
+    if (marks[i].name === expectedMark) {
+        return 1;
+    }
+}
+
+return 0;</parameter>
+                            </parameters>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>midibus_browser_category_channel</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>Midibus browser login execution message</name>
+                    <type>DEPENDENT</type>
+                    <key>midibus.browser.login.execution.message</key>
+                    <delay>0</delay>
+                    <history>7d</history>
+                    <value_type>TEXT</value_type>
+                    <trends>0</trends>
+                    <preprocessing>
+                        <step>
+                            <type>JAVASCRIPT</type>
+                            <parameters>
+                                <parameter>var data = JSON.parse(value);
+
+if (data.error &amp;&amp; data.error.message) {
+    return &quot;login: &quot; + data.error.message;
+}
+
+return &quot;&quot;;</parameter>
+                            </parameters>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>midibus_browser_login</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>Midibus browser login execution status</name>
+                    <type>DEPENDENT</type>
+                    <key>midibus.browser.login.execution.status</key>
+                    <delay>0</delay>
+                    <history>7d</history>
+                    <preprocessing>
+                        <step>
+                            <type>JAVASCRIPT</type>
+                            <parameters>
+                                <parameter>var data = JSON.parse(value);
+
+if (data.error &amp;&amp; data.error.message) {
+    return 0;
+}
+
+return 1;</parameter>
+                            </parameters>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>midibus_browser_login</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>Midibus browser login validation status</name>
+                    <type>DEPENDENT</type>
+                    <key>midibus.browser.login.validation.status</key>
+                    <delay>0</delay>
+                    <history>7d</history>
+                    <preprocessing>
+                        <step>
+                            <type>JAVASCRIPT</type>
+                            <parameters>
+                                <parameter>var data = JSON.parse(value);
+
+if (data.error &amp;&amp; data.error.message) {
+    return 1;
+}
+
+var expectedMark = &quot;dashboard usable&quot;;
+
+var marks = [];
+
+if (data.performance_data &amp;&amp; data.performance_data.marks) {
+    marks = data.performance_data.marks;
+}
+
+if (
+    data.performance_data &amp;&amp;
+    data.performance_data.details &amp;&amp;
+    data.performance_data.details.marks
+) {
+    marks = data.performance_data.details.marks;
+}
+
+for (var i = 0; i &lt; marks.length; i++) {
+    if (marks[i].name === expectedMark) {
+        return 1;
+    }
+}
+
+return 0;</parameter>
+                            </parameters>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>midibus_browser_login</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>Midibus browser media CRUD execution message</name>
+                    <type>DEPENDENT</type>
+                    <key>midibus.browser.media_crud.execution.message</key>
+                    <delay>0</delay>
+                    <history>7d</history>
+                    <value_type>TEXT</value_type>
+                    <trends>0</trends>
+                    <preprocessing>
+                        <step>
+                            <type>JAVASCRIPT</type>
+                            <parameters>
+                                <parameter>var data = JSON.parse(value);
+
+if (data.error &amp;&amp; data.error.message) {
+    return &quot;media_crud: &quot; + data.error.message;
+}
+
+return &quot;&quot;;</parameter>
+                            </parameters>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>midibus_browser_media_crud</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>Midibus browser media CRUD execution status</name>
+                    <type>DEPENDENT</type>
+                    <key>midibus.browser.media_crud.execution.status</key>
+                    <delay>0</delay>
+                    <history>7d</history>
+                    <preprocessing>
+                        <step>
+                            <type>JAVASCRIPT</type>
+                            <parameters>
+                                <parameter>var data = JSON.parse(value);
+
+if (data.error &amp;&amp; data.error.message) {
+    return 0;
+}
+
+return 1;</parameter>
+                            </parameters>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>midibus_browser_media_crud</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>Midibus browser media CRUD validation status</name>
+                    <type>DEPENDENT</type>
+                    <key>midibus.browser.media_crud.validation.status</key>
+                    <delay>0</delay>
+                    <history>7d</history>
+                    <preprocessing>
+                        <step>
+                            <type>JAVASCRIPT</type>
+                            <parameters>
+                                <parameter>var data = JSON.parse(value);
+
+if (data.error &amp;&amp; data.error.message) {
+    return 1;
+}
+
+var expectedMark = &quot;delete media&quot;;
+
+var marks = [];
+
+if (data.performance_data &amp;&amp; data.performance_data.marks) {
+    marks = data.performance_data.marks;
+}
+
+if (
+    data.performance_data &amp;&amp;
+    data.performance_data.details &amp;&amp;
+    data.performance_data.details.marks
+) {
+    marks = data.performance_data.details.marks;
+}
+
+for (var i = 0; i &lt; marks.length; i++) {
+    if (marks[i].name === expectedMark) {
+        return 1;
+    }
+}
+
+return 0;</parameter>
+                            </parameters>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>midibus_browser_media_crud</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>Midibus browser secure playback execution message</name>
+                    <type>DEPENDENT</type>
+                    <key>midibus.browser.secure_playback.execution.message</key>
+                    <delay>0</delay>
+                    <history>7d</history>
+                    <value_type>TEXT</value_type>
+                    <trends>0</trends>
+                    <preprocessing>
+                        <step>
+                            <type>JAVASCRIPT</type>
+                            <parameters>
+                                <parameter>var data = JSON.parse(value);
+
+if (data.error &amp;&amp; data.error.message) {
+    return &quot;secure_playback: &quot; + data.error.message;
+}
+
+return &quot;&quot;;</parameter>
+                            </parameters>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>midibus_browser_secure_playback</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>Midibus browser secure playback execution status</name>
+                    <type>DEPENDENT</type>
+                    <key>midibus.browser.secure_playback.execution.status</key>
+                    <delay>0</delay>
+                    <history>7d</history>
+                    <preprocessing>
+                        <step>
+                            <type>JAVASCRIPT</type>
+                            <parameters>
+                                <parameter>var data = JSON.parse(value);
+
+if (data.error &amp;&amp; data.error.message) {
+    return 0;
+}
+
+return 1;</parameter>
+                            </parameters>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>midibus_browser_secure_playback</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>Midibus browser secure playback validation status</name>
+                    <type>DEPENDENT</type>
+                    <key>midibus.browser.secure_playback.validation.status</key>
+                    <delay>0</delay>
+                    <history>7d</history>
+                    <preprocessing>
+                        <step>
+                            <type>JAVASCRIPT</type>
+                            <parameters>
+                                <parameter>var data = JSON.parse(value);
+
+if (data.error &amp;&amp; data.error.message) {
+    return 1;
+}
+
+var expectedMark = &quot;play secure video&quot;;
+
+var marks = [];
+
+if (data.performance_data &amp;&amp; data.performance_data.marks) {
+    marks = data.performance_data.marks;
+}
+
+if (
+    data.performance_data &amp;&amp;
+    data.performance_data.details &amp;&amp;
+    data.performance_data.details.marks
+) {
+    marks = data.performance_data.details.marks;
+}
+
+for (var i = 0; i &lt; marks.length; i++) {
+    if (marks[i].name === expectedMark) {
+        return 1;
+    }
+}
+
+return 0;</parameter>
+                            </parameters>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>midibus_browser_secure_playback</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>Midibus browser sub user lifecycle execution message</name>
+                    <type>DEPENDENT</type>
+                    <key>midibus.browser.sub_user_lifecycle.execution.message</key>
+                    <delay>0</delay>
+                    <history>7d</history>
+                    <value_type>TEXT</value_type>
+                    <trends>0</trends>
+                    <preprocessing>
+                        <step>
+                            <type>JAVASCRIPT</type>
+                            <parameters>
+                                <parameter>var data = JSON.parse(value);
+
+if (data.error &amp;&amp; data.error.message) {
+    return &quot;sub_user_lifecycle: &quot; + data.error.message;
+}
+
+return &quot;&quot;;</parameter>
+                            </parameters>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>midibus_browser_sub_user_lifecycle</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>Midibus browser sub user lifecycle execution status</name>
+                    <type>DEPENDENT</type>
+                    <key>midibus.browser.sub_user_lifecycle.execution.status</key>
+                    <delay>0</delay>
+                    <history>7d</history>
+                    <preprocessing>
+                        <step>
+                            <type>JAVASCRIPT</type>
+                            <parameters>
+                                <parameter>var data = JSON.parse(value);
+
+if (data.error &amp;&amp; data.error.message) {
+    return 0;
+}
+
+return 1;</parameter>
+                            </parameters>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>midibus_browser_sub_user_lifecycle</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>Midibus browser sub user lifecycle validation status</name>
+                    <type>DEPENDENT</type>
+                    <key>midibus.browser.sub_user_lifecycle.validation.status</key>
+                    <delay>0</delay>
+                    <history>7d</history>
+                    <preprocessing>
+                        <step>
+                            <type>JAVASCRIPT</type>
+                            <parameters>
+                                <parameter>var data = JSON.parse(value);
+
+if (data.error &amp;&amp; data.error.message) {
+    return 1;
+}
+
+var expectedMark = &quot;delete sub user&quot;;
+
+var marks = [];
+
+if (data.performance_data &amp;&amp; data.performance_data.marks) {
+    marks = data.performance_data.marks;
+}
+
+if (
+    data.performance_data &amp;&amp;
+    data.performance_data.details &amp;&amp;
+    data.performance_data.details.marks
+) {
+    marks = data.performance_data.details.marks;
+}
+
+for (var i = 0; i &lt; marks.length; i++) {
+    if (marks[i].name === expectedMark) {
+        return 1;
+    }
+}
+
+return 0;</parameter>
+                            </parameters>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>midibus_browser_sub_user_lifecycle</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>Midibus category and channel config check</name>
+                    <type>BROWSER</type>
+                    <key>midibus_browser_category_channel</key>
+                    <delay>4h</delay>
+                    <history>7d</history>
+                    <value_type>TEXT</value_type>
+                    <trends>0</trends>
+                    <params>var browser, result;
+
+browser = new Browser(Browser.chromeOptions());
+
+function findRequired(strategy, selector, name) {
+    var el = browser.findElement(strategy, selector);
+    if (el === null) {
+        throw Error(&quot;cannot find &quot; + name + &quot;: &quot; + selector);
+    }
+    return el;
+}
+
+function clickIfExists(strategy, selector, name) {
+    browser.setElementWaitTimeout(1000);
+
+    var el = browser.findElement(strategy, selector);
+
+    browser.setElementWaitTimeout(10000);
+
+    if (el !== null) {
+        el.click();
+        browser.collectPerfEntries(name);
+        return true;
+    }
+
+    return false;
+}
+
+function acceptAlertIfPresent() {
+    var alert = browser.getAlert();
+    if (alert !== null &amp;&amp; alert.text !== null) {
+        alert.accept();
+    }
+}
+
+try {
+    var params = JSON.parse(value);
+    var categoryName = params.testPrefix + &quot;-category-&quot; + (new Date()).getTime();
+
+    browser.setScreenSize(Number(params.width), Number(params.height));
+    browser.setElementWaitTimeout(10000);
+    browser.setSessionTimeout(30000);
+
+    browser.navigate(params.webURL);
+    browser.collectPerfEntries(&quot;open login page&quot;);
+
+    findRequired(&quot;xpath&quot;, &quot;//input[@id='username']&quot;, &quot;username input&quot;).sendKeys(params.username);
+    findRequired(&quot;xpath&quot;, &quot;//input[@type='password']&quot;, &quot;password input&quot;).sendKeys(params.password);
+    findRequired(&quot;xpath&quot;, &quot;//button[@type='button']&quot;, &quot;login button&quot;).click();
+
+    browser.collectPerfEntries(&quot;submit login&quot;);
+
+
+    clickIfExists(&quot;xpath&quot;, &quot;//*[@onclick='tutorialLayerTodayClose()']&quot;, &quot;close tutorial popup&quot;);
+    clickIfExists(&quot;xpath&quot;, &quot;//area[contains(@href, 'trialLayerTodayClose')]&quot;, &quot;close trial popup&quot;);
+
+
+    findRequired(&quot;xpath&quot;, &quot;//li[@id='menu_media_icon']&quot;, &quot;media menu&quot;).click();
+
+    findRequired(&quot;xpath&quot;, &quot;//*[@id='addCategoryBtn']&quot;, &quot;add category button&quot;).click();
+
+    var categoryInput = findRequired(&quot;xpath&quot;, &quot;//input[@id='newCategoryName']&quot;, &quot;new category name input&quot;);
+    categoryInput.clear();
+    categoryInput.sendKeys(categoryName);
+
+    findRequired(&quot;xpath&quot;, &quot;//button[@onclick='createNewCategory()']&quot;, &quot;create category button&quot;).click();
+    acceptAlertIfPresent();
+
+    findRequired(&quot;xpath&quot;, &quot;//*[contains(., '&quot; + categoryName + &quot;')]&quot;, &quot;created category name&quot;);
+    browser.collectPerfEntries(&quot;create category&quot;);
+
+    findRequired(&quot;xpath&quot;, &quot;//li[@id='menu_config_icon']&quot;, &quot;config menu&quot;).click();
+
+    findRequired(&quot;xpath&quot;, &quot;//button[@id='categoryTab-tab']&quot;, &quot;category tab&quot;).click();
+
+    var categorySelector = &quot;//a[starts-with(@id, 'category_') and (@title='&quot; + categoryName + &quot;' or normalize-space(.)='&quot; + categoryName + &quot;')]&quot;;
+    findRequired(&quot;xpath&quot;, categorySelector, &quot;created category in config&quot;).click();
+
+    findRequired(&quot;xpath&quot;, &quot;//button[@id='deleteCategoryBtn']&quot;, &quot;delete category button&quot;).click();
+    acceptAlertIfPresent();
+    Zabbix.sleep(1000);
+    acceptAlertIfPresent();
+
+    browser.setElementWaitTimeout(1000);
+    var deletedCategory = browser.findElement(&quot;xpath&quot;, categorySelector);
+    browser.setElementWaitTimeout(10000);
+
+    if (deletedCategory !== null) {
+        throw Error(&quot;category still exists after delete: &quot; + categoryName);
+    }
+
+    browser.collectPerfEntries(&quot;delete category&quot;);
+
+    findRequired(&quot;xpath&quot;, &quot;//button[@id='vodChannelTab-tab']&quot;, &quot;vod channel tab&quot;).click();
+
+    var channelUrl = findRequired(&quot;xpath&quot;, &quot;//input[@id='channelUrl']&quot;, &quot;channel url checkbox&quot;);
+    var checked = channelUrl.getProperty(&quot;checked&quot;);
+
+    if (checked !== true &amp;&amp; checked !== &quot;true&quot;) {
+        channelUrl.click();
+    }
+
+    findRequired(&quot;xpath&quot;, &quot;//button[@id='vodChannelConfigSaveBtn']&quot;, &quot;vod channel config save button&quot;).click();
+    acceptAlertIfPresent();
+
+    channelUrl = findRequired(&quot;xpath&quot;, &quot;//input[@id='channelUrl']&quot;, &quot;channel url checkbox after save&quot;);
+    checked = channelUrl.getProperty(&quot;checked&quot;);
+
+    if (checked !== true &amp;&amp; checked !== &quot;true&quot;) {
+        throw Error(&quot;channel URL checkbox is not enabled after save&quot;);
+    }
+
+    browser.collectPerfEntries(&quot;save channel config&quot;);
+
+    result = browser.getResult();
+    result.categoryName = categoryName;
+    result.screenshot = browser.getScreenshot();
+}
+catch (err) {
+    if (!(err instanceof BrowserError)) {
+        browser.setError(err.message);
+    }
+
+    result = browser.getResult();
+    result.error.screenshot = browser.getScreenshot();
+}
+finally {
+    return JSON.stringify(result);
+}</params>
+                    <timeout>120s</timeout>
+                    <parameters>
+                        <parameter>
+                            <name>height</name>
+                            <value>1080</value>
+                        </parameter>
+                        <parameter>
+                            <name>password</name>
+                            <value>{$MIDIBUS_PASSWORD}</value>
+                        </parameter>
+                        <parameter>
+                            <name>testPrefix</name>
+                            <value>{$MIDIBUS_TEST_PREFIX}</value>
+                        </parameter>
+                        <parameter>
+                            <name>username</name>
+                            <value>{$MIDIBUS_USER}</value>
+                        </parameter>
+                        <parameter>
+                            <name>webURL</name>
+                            <value>{$MIDIBUS_URL}</value>
+                        </parameter>
+                        <parameter>
+                            <name>width</name>
+                            <value>1920</value>
+                        </parameter>
+                    </parameters>
+                </item>
+                <item>
+                    <name>Midibus login check</name>
+                    <type>BROWSER</type>
+                    <key>midibus_browser_login</key>
+                    <delay>4h</delay>
+                    <history>7d</history>
+                    <value_type>TEXT</value_type>
+                    <trends>0</trends>
+                    <params>var browser, result;
+
+browser = new Browser(Browser.chromeOptions());
+
+function findRequired(strategy, selector, name) {
+    var el = browser.findElement(strategy, selector);
+    if (el === null) {
+        throw Error(&quot;cannot find &quot; + name + &quot;: &quot; + selector);
+    }
+    return el;
+}
+
+function clickIfExists(strategy, selector, name) {
+    browser.setElementWaitTimeout(1000);
+
+    var el = browser.findElement(strategy, selector);
+
+    browser.setElementWaitTimeout(10000);
+
+    if (el !== null) {
+        el.click();
+        browser.collectPerfEntries(name);
+        return true;
+    }
+
+    return false;
+}
+
+try {
+    var params = JSON.parse(value);
+
+    browser.setScreenSize(Number(params.width), Number(params.height));
+    browser.setElementWaitTimeout(10000);
+    browser.setSessionTimeout(30000);
+
+    browser.navigate(params.webURL);
+    browser.collectPerfEntries(&quot;open login page&quot;);
+
+    findRequired(&quot;xpath&quot;, &quot;//input[@id='username']&quot;, &quot;username input&quot;).sendKeys(params.username);
+    findRequired(&quot;xpath&quot;, &quot;//input[@type='password']&quot;, &quot;password input&quot;).sendKeys(params.password);
+    findRequired(&quot;xpath&quot;, &quot;//button[@type='button']&quot;, &quot;login button&quot;).click();
+
+    browser.collectPerfEntries(&quot;submit login&quot;);
+
+    findRequired(&quot;xpath&quot;, &quot;//li[@id='menu_dashboard' and contains(., '대시보드')]&quot;, &quot;dashboard menu&quot;);
+    browser.collectPerfEntries(&quot;login success&quot;);
+
+    clickIfExists(&quot;xpath&quot;, &quot;//*[@onclick='tutorialLayerTodayClose()']&quot;, &quot;close tutorial popup&quot;);
+    clickIfExists(&quot;xpath&quot;, &quot;//area[contains(@href, 'trialLayerTodayClose')]&quot;, &quot;close trial popup&quot;);
+
+    findRequired(&quot;xpath&quot;, &quot;//li[@id='menu_dashboard' and contains(., '대시보드')]&quot;, &quot;usable dashboard after popup close&quot;);
+    browser.collectPerfEntries(&quot;dashboard usable&quot;);
+
+    result = browser.getResult();
+    result.screenshot = browser.getScreenshot();
+}
+catch (err) {
+    if (!(err instanceof BrowserError)) {
+        browser.setError(err.message);
+    }
+
+    result = browser.getResult();
+    result.error.screenshot = browser.getScreenshot();
+}
+finally {
+    return JSON.stringify(result);
+}</params>
+                    <parameters>
+                        <parameter>
+                            <name>height</name>
+                            <value>1080</value>
+                        </parameter>
+                        <parameter>
+                            <name>password</name>
+                            <value>{$MIDIBUS_PASSWORD}</value>
+                        </parameter>
+                        <parameter>
+                            <name>username</name>
+                            <value>{$MIDIBUS_USER}</value>
+                        </parameter>
+                        <parameter>
+                            <name>webURL</name>
+                            <value>{$MIDIBUS_URL}</value>
+                        </parameter>
+                        <parameter>
+                            <name>width</name>
+                            <value>1920</value>
+                        </parameter>
+                    </parameters>
+                </item>
+                <item>
+                    <name>Midibus media upload delete check</name>
+                    <type>BROWSER</type>
+                    <key>midibus_browser_media_crud</key>
+                    <delay>4h</delay>
+                    <history>7d</history>
+                    <value_type>TEXT</value_type>
+                    <trends>0</trends>
+                    <params>var browser, result;
+
+browser = new Browser(Browser.chromeOptions());
+
+function findRequired(strategy, selector, name) {
+    var el = browser.findElement(strategy, selector);
+    if (el === null) {
+        throw Error(&quot;cannot find &quot; + name + &quot;: &quot; + selector);
+    }
+    return el;
+}
+
+function clickIfExists(strategy, selector, name) {
+    browser.setElementWaitTimeout(1000);
+
+    var el = browser.findElement(strategy, selector);
+
+    browser.setElementWaitTimeout(10000);
+
+    if (el !== null) {
+        el.click();
+        browser.collectPerfEntries(name);
+        return true;
+    }
+
+    return false;
+}
+
+function acceptAlertIfPresent() {
+    var alert = browser.getAlert();
+    if (alert !== null &amp;&amp; alert.text !== null) {
+        alert.accept();
+        return true;
+    }
+
+    return false;
+}
+
+function acceptAlertRequired(name) {
+    for (var i = 0; i &lt; 10; i++) {
+        var alert = browser.getAlert();
+
+        if (alert !== null &amp;&amp; alert.text !== null) {
+            alert.accept();
+            browser.collectPerfEntries(name);
+            return true;
+        }
+
+        Zabbix.sleep(500);
+    }
+
+    throw Error(&quot;cannot find browser alert: &quot; + name);
+}
+
+try {
+    var params = JSON.parse(value);
+    var videoFileName = params.testVideoPath.split(&quot;/&quot;).pop();
+
+    browser.setScreenSize(Number(params.width), Number(params.height));
+    browser.setElementWaitTimeout(10000);
+    browser.setSessionTimeout(30000);
+
+    browser.navigate(params.webURL);
+    browser.collectPerfEntries(&quot;open login page&quot;);
+
+    findRequired(&quot;xpath&quot;, &quot;//input[@id='username']&quot;, &quot;username input&quot;).sendKeys(params.username);
+    findRequired(&quot;xpath&quot;, &quot;//input[@type='password']&quot;, &quot;password input&quot;).sendKeys(params.password);
+    findRequired(&quot;xpath&quot;, &quot;//button[@type='button']&quot;, &quot;login button&quot;).click();
+
+    browser.collectPerfEntries(&quot;submit login&quot;);
+
+
+    clickIfExists(&quot;xpath&quot;, &quot;//*[@onclick='tutorialLayerTodayClose()']&quot;, &quot;close tutorial popup&quot;);
+    clickIfExists(&quot;xpath&quot;, &quot;//area[contains(@href, 'trialLayerTodayClose')]&quot;, &quot;close trial popup&quot;);
+
+
+    findRequired(&quot;xpath&quot;, &quot;//div[contains(@class, 'fileUploadBtn')]&quot;, &quot;media upload button&quot;).click();
+
+    findRequired(&quot;xpath&quot;, &quot;//input[@type='file' and @name='file']&quot;, &quot;media file input&quot;).sendKeys(params.testVideoPath);
+
+    findRequired(&quot;xpath&quot;, &quot;//button[@id='trigger-upload']&quot;, &quot;upload start button&quot;).click();
+    browser.collectPerfEntries(&quot;start media upload&quot;);
+
+    Zabbix.sleep(30000);
+
+    findRequired(&quot;xpath&quot;, &quot;//button[@id='closeFileUploadLayerBtn']&quot;, &quot;close upload layer button&quot;).click();
+    browser.collectPerfEntries(&quot;close upload layer&quot;);
+
+    findRequired(&quot;xpath&quot;, &quot;//li[@id='menu_media_icon']&quot;, &quot;media menu&quot;).click();
+
+    findRequired(&quot;xpath&quot;, &quot;//li[@id='mediaSubMenu_categoryAll']&quot;, &quot;media all submenu&quot;).click();
+
+    var mediaName = findRequired(
+        &quot;xpath&quot;,
+        &quot;//div[starts-with(@id, 'mediaName_') and contains(., '&quot; + videoFileName + &quot;')]&quot;,
+        &quot;uploaded media name&quot;
+    );
+
+    var mediaNameId = mediaName.getAttribute(&quot;id&quot;);
+    var mediaId = mediaNameId.replace(&quot;mediaName_&quot;, &quot;&quot;);
+
+    findRequired(&quot;xpath&quot;, &quot;//input[@id='mediaCheck_&quot; + mediaId + &quot;']&quot;, &quot;uploaded media checkbox&quot;).click();
+
+    var actionSelector = findRequired(&quot;xpath&quot;, &quot;//select[@id='mediaActionSelector']&quot;, &quot;media action selector&quot;);
+    actionSelector.click();
+    actionSelector.sendKeys(&quot;\uE015&quot;);
+    actionSelector.sendKeys(&quot;\uE015&quot;);
+    actionSelector.sendKeys(&quot;\uE015&quot;);
+    actionSelector.sendKeys(&quot;\uE007&quot;);
+
+    acceptAlertRequired(&quot;confirm delete media&quot;);
+
+    Zabbix.sleep(3000);
+
+    browser.setElementWaitTimeout(1000);
+    var deletedMedia = browser.findElement(
+        &quot;xpath&quot;,
+        &quot;//div[starts-with(@id, 'mediaName_') and contains(., '&quot; + videoFileName + &quot;')]&quot;
+    );
+    browser.setElementWaitTimeout(10000);
+
+    if (deletedMedia !== null) {
+        throw Error(&quot;media delete failed: uploaded media still exists: &quot; + videoFileName);
+    }
+
+    browser.collectPerfEntries(&quot;delete media&quot;);
+
+    result = browser.getResult();
+    result.videoFileName = videoFileName;
+    result.screenshot = browser.getScreenshot();
+}
+catch (err) {
+    if (!(err instanceof BrowserError)) {
+        browser.setError(err.message);
+    }
+
+    result = browser.getResult();
+    result.error.screenshot = browser.getScreenshot();
+}
+finally {
+    return JSON.stringify(result);
+}</params>
+                    <timeout>180s</timeout>
+                    <parameters>
+                        <parameter>
+                            <name>height</name>
+                            <value>1080</value>
+                        </parameter>
+                        <parameter>
+                            <name>password</name>
+                            <value>{$MIDIBUS_PASSWORD}</value>
+                        </parameter>
+                        <parameter>
+                            <name>testPrefix</name>
+                            <value>{$MIDIBUS_TEST_PREFIX}</value>
+                        </parameter>
+                        <parameter>
+                            <name>testVideoPath</name>
+                            <value>{$MIDIBUS_TEST_VIDEO_PATH}</value>
+                        </parameter>
+                        <parameter>
+                            <name>username</name>
+                            <value>{$MIDIBUS_USER}</value>
+                        </parameter>
+                        <parameter>
+                            <name>webURL</name>
+                            <value>{$MIDIBUS_URL}</value>
+                        </parameter>
+                        <parameter>
+                            <name>width</name>
+                            <value>1920</value>
+                        </parameter>
+                    </parameters>
+                </item>
+                <item>
+                    <name>Midibus browser secure playback</name>
+                    <type>BROWSER</type>
+                    <key>midibus_browser_secure_playback</key>
+                    <delay>4h</delay>
+                    <history>7d</history>
+                    <value_type>TEXT</value_type>
+                    <trends>0</trends>
+                    <params>var browser, result;
+
+browser = new Browser(Browser.chromeOptions());
+
+function findRequired(strategy, selector, name) {
+    var el = browser.findElement(strategy, selector);
+    if (el === null) {
+        throw Error(&quot;cannot find &quot; + name + &quot;: &quot; + selector);
+    }
+    return el;
+}
+
+function clickIfExists(strategy, selector, name) {
+    browser.setElementWaitTimeout(1000);
+
+    var el = browser.findElement(strategy, selector);
+
+    browser.setElementWaitTimeout(10000);
+
+    if (el !== null) {
+        el.click();
+        browser.collectPerfEntries(name);
+        return true;
+    }
+
+    return false;
+}
+
+function activateRequiredButton(strategy, selector, name) {
+    var lastError;
+
+    for (var i = 0; i &lt; 3; i++) {
+        var el = findRequired(strategy, selector, name);
+
+        try {
+            el.click();
+            return;
+        }
+        catch (err) {
+            lastError = err;
+        }
+
+        try {
+            el.sendKeys(&quot;\n&quot;);
+            return;
+        }
+        catch (sendErr) {
+            lastError = sendErr;
+        }
+
+        Zabbix.sleep(1000);
+    }
+
+    throw lastError;
+}
+
+try {
+    var params = JSON.parse(value);
+
+    browser.setScreenSize(Number(params.width), Number(params.height));
+    browser.setElementWaitTimeout(10000);
+    browser.setSessionTimeout(30000);
+
+    browser.navigate(params.webURL);
+    browser.collectPerfEntries(&quot;open login page&quot;);
+
+    findRequired(&quot;xpath&quot;, &quot;//input[@id='username']&quot;, &quot;username input&quot;).sendKeys(params.username);
+    findRequired(&quot;xpath&quot;, &quot;//input[@type='password']&quot;, &quot;password input&quot;).sendKeys(params.password);
+    findRequired(&quot;xpath&quot;, &quot;//button[@type='button']&quot;, &quot;login button&quot;).click();
+
+    browser.collectPerfEntries(&quot;submit login&quot;);
+
+
+    clickIfExists(&quot;xpath&quot;, &quot;//*[@onclick='tutorialLayerTodayClose()']&quot;, &quot;close tutorial popup&quot;);
+    clickIfExists(&quot;xpath&quot;, &quot;//area[contains(@href, 'trialLayerTodayClose')]&quot;, &quot;close trial popup&quot;);
+
+
+    findRequired(&quot;xpath&quot;, &quot;//li[@id='menu_channel_icon']&quot;, &quot;channel menu&quot;).click();
+
+    findRequired(&quot;xpath&quot;, &quot;//li[@id='channelSubMenu_ch_19ec4e3e']&quot;, &quot;restricted channel submenu&quot;).click();
+
+    findRequired(
+        &quot;xpath&quot;,
+        &quot;//div[starts-with(@id, 'mediaName_') and contains(., 'tutorialSampleVideo.mp4')]&quot;,
+        &quot;restricted channel media&quot;
+    ).click();
+
+    findRequired(
+        &quot;xpath&quot;,
+        &quot;//button[@data-bs-target='#createSecurePlayKeyLayer']&quot;,
+        &quot;create secure play key button&quot;
+    ).click();
+
+    findRequired(&quot;xpath&quot;, &quot;//button[@id='quickBtn_1day']&quot;, &quot;1 day expiration button&quot;).click();
+
+    var allowedIpInput = findRequired(&quot;xpath&quot;, &quot;//input[@id='tokenSecurity_allowedIP']&quot;, &quot;allowed IP input&quot;);
+    allowedIpInput.clear();
+    allowedIpInput.sendKeys(params.allowedIP);
+
+    findRequired(&quot;xpath&quot;, &quot;//button[@id='createKeyBtn']&quot;, &quot;create key button&quot;).click();
+    Zabbix.sleep(2000);
+
+    browser.collectPerfEntries(&quot;create secure play key&quot;);
+
+    activateRequiredButton(
+        &quot;xpath&quot;,
+        &quot;//div[contains(@class, 'modal-footer')]//button[@id='applyShareUrlBtn']&quot;,
+        &quot;apply share url button&quot;
+    );
+
+    browser.collectPerfEntries(&quot;apply secure key to share url&quot;);
+
+    var shareUrl = findRequired(&quot;xpath&quot;, &quot;//div[@id='link_area']&quot;, &quot;share url&quot;).getText();
+
+    if (shareUrl === null || shareUrl.indexOf(&quot;https://&quot;) !== 0) {
+        throw Error(&quot;invalid share url: &quot; + shareUrl);
+    }
+
+    findRequired(&quot;xpath&quot;, &quot;//button[@id='createSecurePlayKeyLayerCloseBtn']&quot;, &quot;close secure key layer button&quot;).click();
+
+    browser.navigate(shareUrl);
+    browser.collectPerfEntries(&quot;open secure playback url&quot;);
+
+    browser.setElementWaitTimeout(30000);
+
+    findRequired(
+        &quot;xpath&quot;,
+        &quot;//div[contains(@class, 'jw-icon-display') and @role='button']&quot;,
+        &quot;play button&quot;
+    ).click();
+
+    findRequired(
+        &quot;xpath&quot;,
+        &quot;//*[contains(@class, 'jw-state-playing')]&quot;,
+        &quot;jw player playing state&quot;
+    );
+
+    browser.collectPerfEntries(&quot;play secure video&quot;);
+
+    result = browser.getResult();
+    result.shareUrl = shareUrl;
+    result.screenshot = browser.getScreenshot();
+}
+catch (err) {
+    if (!(err instanceof BrowserError)) {
+        browser.setError(err.message);
+    }
+
+    result = browser.getResult();
+    result.error.screenshot = browser.getScreenshot();
+}
+finally {
+    return JSON.stringify(result);
+}</params>
+                    <parameters>
+                        <parameter>
+                            <name>allowedIP</name>
+                            <value>{$MIDIBUS_ALLOWED_IP}</value>
+                        </parameter>
+                        <parameter>
+                            <name>height</name>
+                            <value>1080</value>
+                        </parameter>
+                        <parameter>
+                            <name>password</name>
+                            <value>{$MIDIBUS_PASSWORD}</value>
+                        </parameter>
+                        <parameter>
+                            <name>username</name>
+                            <value>{$MIDIBUS_USER}</value>
+                        </parameter>
+                        <parameter>
+                            <name>webURL</name>
+                            <value>{$MIDIBUS_URL}</value>
+                        </parameter>
+                        <parameter>
+                            <name>width</name>
+                            <value>1920</value>
+                        </parameter>
+                    </parameters>
+                </item>
+                <item>
+                    <name>Midibus browser sub user check</name>
+                    <type>BROWSER</type>
+                    <key>midibus_browser_sub_user_lifecycle</key>
+                    <delay>4h</delay>
+                    <history>7d</history>
+                    <value_type>TEXT</value_type>
+                    <trends>0</trends>
+                    <params>var browser, result;
+
+browser = new Browser(Browser.chromeOptions());
+
+function findRequired(strategy, selector, name) {
+    var el = browser.findElement(strategy, selector);
+    if (el === null) {
+        throw Error(&quot;cannot find &quot; + name + &quot;: &quot; + selector);
+    }
+    return el;
+}
+
+function clickIfExists(strategy, selector, name) {
+    browser.setElementWaitTimeout(1000);
+
+    var el = browser.findElement(strategy, selector);
+
+    browser.setElementWaitTimeout(10000);
+
+    if (el !== null) {
+        el.click();
+        browser.collectPerfEntries(name);
+        return true;
+    }
+
+    return false;
+}
+
+function acceptAlertIfPresent() {
+    var alert = browser.getAlert();
+    if (alert !== null &amp;&amp; alert.text !== null) {
+        alert.accept();
+        return true;
+    }
+
+    return false;
+}
+
+function acceptAlertRequired(name) {
+    for (var i = 0; i &lt; 10; i++) {
+        var alert = browser.getAlert();
+
+        if (alert !== null &amp;&amp; alert.text !== null) {
+            alert.accept();
+            browser.collectPerfEntries(name);
+            return true;
+        }
+
+        Zabbix.sleep(500);
+    }
+
+    throw Error(&quot;cannot find browser alert: &quot; + name);
+}
+
+try {
+    var params = JSON.parse(value);
+    var suffix = (new Date()).getTime();
+
+    var subUserName = params.testPrefix + &quot;-subuser-&quot; + suffix;
+    var subUserEmail = params.testPrefix + &quot;-subuser-&quot; + suffix + &quot;@example.com&quot;;
+    var subUserPassword = &quot;ZbxBi1234!&quot;;
+    var subUserPhone = &quot;010&quot; + String(suffix).slice(-8);
+
+    browser.setScreenSize(Number(params.width), Number(params.height));
+    browser.setElementWaitTimeout(10000);
+    browser.setSessionTimeout(30000);
+
+    browser.navigate(params.webURL);
+    browser.collectPerfEntries(&quot;open login page&quot;);
+
+    findRequired(&quot;xpath&quot;, &quot;//input[@id='username']&quot;, &quot;username input&quot;).sendKeys(params.username);
+    findRequired(&quot;xpath&quot;, &quot;//input[@type='password']&quot;, &quot;password input&quot;).sendKeys(params.password);
+    findRequired(&quot;xpath&quot;, &quot;//button[@type='button']&quot;, &quot;login button&quot;).click();
+
+    browser.collectPerfEntries(&quot;submit login&quot;);
+
+
+    clickIfExists(&quot;xpath&quot;, &quot;//*[@onclick='tutorialLayerTodayClose()']&quot;, &quot;close tutorial popup&quot;);
+    clickIfExists(&quot;xpath&quot;, &quot;//area[contains(@href, 'trialLayerTodayClose')]&quot;, &quot;close trial popup&quot;);
+
+    var baseUrl = params.webURL.replace(/\/login\/?$/, &quot;&quot;);
+
+    browser.navigate(baseUrl + &quot;/subUsers&quot;);
+    browser.collectPerfEntries(&quot;open sub users page&quot;);
+
+    findRequired(&quot;xpath&quot;, &quot;//button[@id='editPlaylistBtn']&quot;, &quot;add sub user button&quot;).click();
+
+    var roleSelector = findRequired(&quot;xpath&quot;, &quot;//select[@id='userRoleSelector']&quot;, &quot;user role selector&quot;);
+    roleSelector.click();
+    roleSelector.sendKeys(&quot;\uE015&quot;);
+    roleSelector.sendKeys(&quot;\uE007&quot;);
+
+    findRequired(&quot;xpath&quot;, &quot;//input[@id='subUserEmail']&quot;, &quot;sub user email input&quot;).sendKeys(subUserEmail);
+    findRequired(&quot;xpath&quot;, &quot;//input[@id='subUserPassword']&quot;, &quot;sub user password input&quot;).sendKeys(subUserPassword);
+    findRequired(&quot;xpath&quot;, &quot;//input[@id='subUserPasswordCheck']&quot;, &quot;sub user password check input&quot;).sendKeys(subUserPassword);
+    findRequired(&quot;xpath&quot;, &quot;//input[@id='subUserName']&quot;, &quot;sub user name input&quot;).sendKeys(subUserName);
+    findRequired(&quot;xpath&quot;, &quot;//input[@id='subUserPhone']&quot;, &quot;sub user phone input&quot;).sendKeys(subUserPhone);
+
+    findRequired(&quot;xpath&quot;, &quot;//button[@id='saveSubUserInfoBtn']&quot;, &quot;save new sub user button&quot;).click();
+    acceptAlertIfPresent();
+
+    Zabbix.sleep(2000);
+
+    browser.collectPerfEntries(&quot;create sub user&quot;);
+
+    findRequired(
+        &quot;xpath&quot;,
+        &quot;//tr[.//td[contains(@aria-describedby, 'subUserList_userName') and (contains(@title, '&quot; + subUserName + &quot;') or contains(., '&quot; + subUserName + &quot;'))]]&quot;,
+        &quot;created sub user row&quot;
+    ).click();
+
+    var editRoleSelector = findRequired(&quot;xpath&quot;, &quot;//select[@id='userRoleSelector']&quot;, &quot;edit user role selector&quot;);
+    editRoleSelector.click();
+    editRoleSelector.sendKeys(&quot;\uE015&quot;);
+    editRoleSelector.sendKeys(&quot;\uE007&quot;);
+
+    findRequired(&quot;xpath&quot;, &quot;//button[@id='saveSubUserInfoBtn']&quot;, &quot;save changed sub user button&quot;).click();
+    acceptAlertIfPresent();
+
+    Zabbix.sleep(2000);
+
+    browser.collectPerfEntries(&quot;change sub user role&quot;);
+
+    findRequired(
+        &quot;xpath&quot;,
+        &quot;//tr[.//td[contains(@aria-describedby, 'subUserList_userName') and (contains(@title, '&quot; + subUserName + &quot;') or contains(., '&quot; + subUserName + &quot;'))]]//img[contains(@src, 'delete_btn_small.png') and contains(@onclick, 'deleteSubUser')]&quot;,
+        &quot;delete sub user button&quot;
+    ).click();
+
+    acceptAlertRequired(&quot;confirm delete sub user&quot;);
+
+    Zabbix.sleep(3000);
+
+    browser.setElementWaitTimeout(1000);
+    var deletedSubUser = browser.findElement(
+        &quot;xpath&quot;,
+        &quot;//td[contains(@aria-describedby, 'subUserList_userName') and (contains(@title, '&quot; + subUserName + &quot;') or contains(., '&quot; + subUserName + &quot;'))]&quot;
+    );
+    browser.setElementWaitTimeout(10000);
+
+    if (deletedSubUser !== null) {
+        throw Error(&quot;sub user delete failed: user still exists: &quot; + subUserName);
+    }
+
+    browser.collectPerfEntries(&quot;delete sub user&quot;);
+
+    result = browser.getResult();
+    result.subUserName = subUserName;
+    result.subUserEmail = subUserEmail;
+    result.screenshot = browser.getScreenshot();
+}
+catch (err) {
+    if (!(err instanceof BrowserError)) {
+        browser.setError(err.message);
+    }
+
+    result = browser.getResult();
+    result.error.screenshot = browser.getScreenshot();
+}
+finally {
+    return JSON.stringify(result);
+}</params>
+                    <timeout>120s</timeout>
+                    <parameters>
+                        <parameter>
+                            <name>height</name>
+                            <value>1080</value>
+                        </parameter>
+                        <parameter>
+                            <name>password</name>
+                            <value>{$MIDIBUS_PASSWORD}</value>
+                        </parameter>
+                        <parameter>
+                            <name>testPrefix</name>
+                            <value>{$MIDIBUS_TEST_PREFIX}</value>
+                        </parameter>
+                        <parameter>
+                            <name>username</name>
+                            <value>{$MIDIBUS_USER}</value>
+                        </parameter>
+                        <parameter>
+                            <name>webURL</name>
+                            <value>{$MIDIBUS_URL}</value>
+                        </parameter>
+                        <parameter>
+                            <name>width</name>
+                            <value>1920</value>
+                        </parameter>
+                    </parameters>
+                </item>
+            </items>
+            <macros>
+                <macro>
+                    <macro>{$MIDIBUS_ALLOWED_IP}</macro>
+                    <value>&lt;MIDIBUS_ALLOWED_IP&gt;</value> <!-- Replace with actual allowed IP or set it as a user macro in Zabbix frontend -->
+                </macro>
+                <macro>
+                    <macro>{$MIDIBUS_PASSWORD}</macro>
+                    <value>&lt;MIDIBUS_PASSWORD&gt;</value> <!-- Replace with actual password or set it as a user macro in Zabbix frontend -->
+                </macro>
+                <macro>
+                    <macro>{$MIDIBUS_TEST_PREFIX}</macro>
+                    <value>zbx-bi</value>
+                </macro>
+                <macro>
+                    <macro>{$MIDIBUS_TEST_VIDEO_PATH}</macro>
+                    <value>/opt/zabbix/browser-files/zbx-bi-test-video.mp4</value>
+                </macro>
+                <macro>
+                    <macro>{$MIDIBUS_URL}</macro>
+                    <value>https://midibus.kinxcdn.com/login</value>
+                </macro>
+                <macro>
+                    <macro>{$MIDIBUS_USER}</macro>
+                    <value>&lt;MIDIBUS_USER&gt;</value> <!-- Replace with actual username or set it as a user macro in Zabbix frontend -->
+                </macro>
+            </macros>
+            <inventory_mode>DISABLED</inventory_mode>
+        </host>
+    </hosts>
+    <triggers>
+        <trigger>
+            <expression>last(/midibus-web/midibus.browser.login.execution.status)=0
+or last(/midibus-web/midibus.browser.category_channel.execution.status)=0
+or last(/midibus-web/midibus.browser.media_crud.execution.status)=0
+or last(/midibus-web/midibus.browser.secure_playback.execution.status)=0
+or last(/midibus-web/midibus.browser.sub_user_lifecycle.execution.status)=0</expression>
+            <name>Browser Item execution failed</name>
+            <priority>HIGH</priority>
+        </trigger>
+        <trigger>
+            <expression>last(/midibus-web/midibus.browser.login.validation.status)=0
+or last(/midibus-web/midibus.browser.category_channel.validation.status)=0
+or last(/midibus-web/midibus.browser.media_crud.validation.status)=0
+or last(/midibus-web/midibus.browser.secure_playback.validation.status)=0
+or last(/midibus-web/midibus.browser.sub_user_lifecycle.validation.status)=0</expression>
+            <name>Midibus feature validation failed</name>
+            <priority>HIGH</priority>
+        </trigger>
+    </triggers>
+</zabbix_export>

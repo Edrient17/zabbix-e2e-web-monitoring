@@ -3,6 +3,9 @@
 Zabbix Web Scenario와 Browser Item을 활용하여 웹서비스의 가용성과 사용자 관점의 E2E 시나리오를 모니터링하는 프로젝트
 
 
+<details>
+<summary><strong>1. 아키텍처</strong></summary>
+
 ## 1. 아키텍처
 
 ![Architecture Diagram](images/architecture_diagram.jpg)
@@ -22,6 +25,12 @@ http://nginx/nginx_status
 ```
 
 
+
+</details>
+
+<details>
+<summary><strong>2. 시스템 구성</strong></summary>
+
 ## 2. 시스템 구성
 
 Docker Compose로 구성한 서비스는 다음과 같다.
@@ -36,6 +45,12 @@ Docker Compose로 구성한 서비스는 다음과 같다.
 | nginx         | nginx-sample      | Web Scenario 테스트용 샘플 웹서비스        |
 
 
+
+</details>
+
+<details>
+<summary><strong>3. 사전 요구사항</strong></summary>
+
 ## 3. 사전 요구사항
 
 VM 환경에는 다음 소프트웨어가 필요하다.
@@ -49,6 +64,12 @@ VM 환경에는 다음 소프트웨어가 필요하다.
 * Git 2.x 이상
 * curl / wget 기본 포함
 
+
+
+</details>
+
+<details>
+<summary><strong>4. 네트워크 및 포트 정책</strong></summary>
 
 ## 4. 네트워크 및 포트 정책
 
@@ -69,6 +90,12 @@ Zabbix Web Scenario에서는 외부 IP가 아니라 Docker 내부 서비스명�
 Zabbix Server는 Docker 내부 네트워크를 통해 `zabbix-agent2:10050`으로 Agent2에 접근한다.
 nginx 전용 `nginx-agent2`는 `nginx-sample` 컨테이너의 PID namespace를 공유하여 nginx 프로세스 상태를 확인한다.
 
+
+
+</details>
+
+<details>
+<summary><strong>5. 설치 및 기동 방법</strong></summary>
 
 ## 5. 설치 및 기동 방법
 
@@ -178,6 +205,12 @@ docker compose down -v
 ```
 
 
+
+</details>
+
+<details>
+<summary><strong>6. nginx 샘플 앱</strong></summary>
+
 ## 6. nginx 샘플 앱
 
 ### 6.1 Web Scenario 대상 엔드포인트
@@ -222,6 +255,12 @@ system.run[sh /var/lib/zabbix/user_scripts/nginx_total_requests.sh]
 * `/nginx_status`는 내부 지표 엔드포인트이므로 외부에 공개하지 않고 Docker 내부 네트워크에서만 접근하도록 `allow`/`deny`를 설정한다.
 * `nginx-agent2`는 `nginx-sample`의 PID namespace만 공유하여 프로세스 확인 범위를 nginx 컨테이너로 제한한다.
 
+
+
+</details>
+
+<details>
+<summary><strong>7. Zabbix Web UI 접속 및 초기 설정</strong></summary>
 
 ## 7. Zabbix Web UI 접속 및 초기 설정
 
@@ -396,9 +435,15 @@ Send only to: Email
 알람 설정 후 장애 테스트를 수행하고 `Reports` > `Action log`에서 메일 발송 결과가 `Sent`로 기록되는지 확인한다.
 
 
-## 8. 장애 테스트 방법
 
-장애 테스트는 Trigger가 `PROBLEM`으로 전환되는지, 복구 후 `RESOLVED`로 전환되는지, 그리고 Email Action이 정상 발송되는지 확인하는 절차이다.
+</details>
+
+<details>
+<summary><strong>8. Web Scenario 및 nginx 장애 테스트 방법</strong></summary>
+
+## 8. Web Scenario 및 nginx 장애 테스트 방법
+
+Web Scenario 및 nginx 내부 지표 장애 테스트는 Trigger가 `PROBLEM`으로 전환되는지, 복구 후 `RESOLVED`로 전환되는지, 그리고 Email Action이 정상 발송되는지 확인하는 절차이다.
 
 장애 발생 후에는 `Monitoring` > `Problems`에서 Problem 상태를 확인하고, `Reports` > `Action log`에서 메일 발송 결과가 `Sent`로 기록되는지 확인한다.
 
@@ -419,9 +464,18 @@ docker stop nginx-sample
 <details>
 <summary><strong>장애 발생 스크린샷 보기</strong></summary>
 
+
+<p><sub>nginx 컨테이너 중지 명령 실행</sub></p>
+
 <img src="images/screenshots/week2/scenario_1/web_scenario_stop_nginx.png" alt="web_scenario_stop_nginx" width="600">
 
+
+<p><sub>Web Scenario 실패 Trigger PROBLEM 전환</sub></p>
+
 <img src="images/screenshots/week2/scenario_1/web_scenario_failed_problem.png" alt="web_scenario_failed_problem" width="720">
+
+
+<p><sub>Web Scenario 실패 알림 메일 수신</sub></p>
 
 <img src="images/screenshots/week2/scenario_1/web_scenario_failed_mail.png" alt="web_scenario_failed_mail" width="400">
 
@@ -441,10 +495,19 @@ docker start nginx-sample
 
 <details>
 <summary><strong>복구 스크린샷 보기</strong></summary>
+
+<p><sub>nginx 컨테이너 재기동 명령 실행</sub></p>
+
 <img src="images/screenshots/week2/scenario_1/web_scenario_start_nginx.png" alt="web_scenario_recovered_problem" width="600">
 
 
+
+<p><sub>Web Scenario 실패 Trigger RESOLVED 전환</sub></p>
+
 <img src="images/screenshots/week2/scenario_1/web_scenario_recovered_problem.png" alt="web_scenario_recovered_problem" width="720">
+
+
+<p><sub>Web Scenario 복구 알림 메일 수신</sub></p>
 
 <img src="images/screenshots/week2/scenario_1/web_scenario_recovered_mail.png" alt="web_scenario_recovered_mail" width="400">
 
@@ -486,7 +549,13 @@ docker exec nginx-sample nginx -s reload
 <details>
 <summary><strong>장애 발생 스크린샷 보기</strong></summary>
 
+
+<p><sub>응답시간 초과 Trigger PROBLEM 전환</sub></p>
+
 <img src="images/screenshots/week2/scenario_2/status_response_time_problem.png" alt="status_response_time_problem" width="600">
+
+
+<p><sub>응답시간 초과 알림 메일 수신</sub></p>
 
 <img src="images/screenshots/week2/scenario_2/status_response_time_mail.png" alt="status_response_time_mail" width="400">
 
@@ -508,7 +577,13 @@ docker exec nginx-sample nginx -s reload
 <details>
 <summary><strong>복구 스크린샷 보기</strong></summary>
 
+
+<p><sub>응답시간 초과 Trigger RESOLVED 전환</sub></p>
+
 <img src="images/screenshots/week2/scenario_2/status_response_time_recovered.png" alt="status_response_time_recovered" width="600">
+
+
+<p><sub>응답시간 초과 복구 알림 메일 수신</sub></p>
 
 <img src="images/screenshots/week2/scenario_2/status_response_time_recovered_mail.png" alt="status_response_time_recovered_mail" width="400">
 
@@ -547,9 +622,18 @@ docker exec nginx-sample nginx -s reload
 <details>
 <summary><strong>장애 발생 스크린샷 보기</strong></summary>
 
+
+<p><sub>응답 코드 비정상 Trigger PROBLEM 전환</sub></p>
+
 <img src="images/screenshots/week2/scenario_3/health_response_code_problem.png" alt="health_response_code_problem" width="600">
 
+
+<p><sub>Web Scenario 실패 알림 메일 수신</sub></p>
+
 <img src="images/screenshots/week2/scenario_3/health_response_code_mail_1.png" alt="health_response_code_mail" width="400">
+
+
+<p><sub>응답 코드 비정상 알림 메일 수신</sub></p>
 
 <img src="images/screenshots/week2/scenario_3/health_response_code_mail_2.png" alt="health_response_code_mail" width="400">
 
@@ -571,9 +655,18 @@ docker exec nginx-sample nginx -s reload
 <details>
 <summary><strong>복구 스크린샷 보기</strong></summary>
 
+
+<p><sub>응답 코드 비정상 Trigger RESOLVED 전환</sub></p>
+
 <img src="images/screenshots/week2/scenario_3/health_response_code_recovered.png" alt="health_response_code_recovered" width="600">
 
+
+<p><sub>Web Scenario 복구 알림 메일 수신</sub></p>
+
 <img src="images/screenshots/week2/scenario_3/health_response_code_recovered_mail_1.png" alt="health_response_code_recovered_mail" width="400">
+
+
+<p><sub>응답 코드 비정상 복구 알림 메일 수신</sub></p>
 
 <img src="images/screenshots/week2/scenario_3/health_response_code_recovered_mail_2.png" alt="health_response_code_recovered_mail" width="400">
 
@@ -618,7 +711,13 @@ docker exec zabbix-server sh -c 'for i in $(seq 1 60); do wget -qO- http://nginx
 <details>
 <summary><strong>장애 발생 스크린샷 보기</strong></summary>
 
+
+<p><sub>active connections Trigger PROBLEM 전환</sub></p>
+
 <img src="images/screenshots/week2/scenario_4/active_connections_problem.png" alt="active_connections_problem" width="600">
+
+
+<p><sub>active connections 알림 메일 수신</sub></p>
 
 <img src="images/screenshots/week2/scenario_4/active_connections_mail.png" alt="active_connections_mail" width="400">
 
@@ -642,7 +741,13 @@ docker exec nginx-sample nginx -s reload
 <details>
 <summary><strong>복구 스크린샷 보기</strong></summary>
 
+
+<p><sub>active connections Trigger RESOLVED 전환</sub></p>
+
 <img src="images/screenshots/week2/scenario_4/active_connections_recovered.png" alt="active_connections_recovered" width="600">
+
+
+<p><sub>active connections 복구 알림 메일 수신</sub></p>
 
 <img src="images/screenshots/week2/scenario_4/active_connections_recovered_mail.png" alt="active_connections_recovered_mail" width="400">
 
@@ -672,7 +777,13 @@ docker restart nginx-sample
 <details>
 <summary><strong>장애 발생 스크린샷 보기</strong></summary>
 
+
+<p><sub>request counter reset Trigger PROBLEM 전환</sub></p>
+
 <img src="images/screenshots/week2/scenario_5/request_counter_reset_problem.png" alt="request_counter_reset_problem" width="600">
+
+
+<p><sub>request counter reset 알림 메일 수신</sub></p>
 
 <img src="images/screenshots/week2/scenario_5/request_counter_reset_mail.png" alt="request_counter_reset_mail" width="400">
 
@@ -696,15 +807,531 @@ docker exec zabbix-server sh -c 'wget -qO- http://nginx/status >/dev/null'
 <details>
 <summary><strong>복구 스크린샷 보기</strong></summary>
 
+
+<p><sub>request counter reset Trigger RESOLVED 전환</sub></p>
+
 <img src="images/screenshots/week2/scenario_5/request_counter_reset_recovered.png" alt="request_counter_reset_recovered" width="600">
+
+
+<p><sub>request counter reset 복구 알림 메일 수신</sub></p>
 
 <img src="images/screenshots/week2/scenario_5/request_counter_reset_recovered_mail.png" alt="request_counter_reset_recovered_mail" width="400">
 
 </details>
 
+### 8.6 Zabbix Export
 
-## 9. 트러블슈팅
-### 9.1 Zabbix Agent2 Not Available
+Web Scenario 및 nginx 내부 지표 Trigger 구성이 포함된 Zabbix Host export 파일은 다음 경로에 보관한다.
+
+```text
+zabbix/export/zbx_export_hosts_Zabbix-server.xml
+zabbix/export/zbx_export_hosts_nginx-sample.xml
+```
+
+
+
+</details>
+
+<details>
+<summary><strong>9. Browser Item 기반 Midibus E2E 모니터링</strong></summary>
+
+## 9. Browser Item 기반 Midibus E2E 모니터링
+
+Midibus 사용자 웹페이지는 Zabbix Agent 기반으로 직접 운영 상태를 수집하는 대상이 아니라, 실제 브라우저에서 사용자 행동을 수행하여 기능 정상 여부를 검증하는 외부 서비스 대상이다.
+따라서 `midibus-web` Host는 Agent interface 없이 Browser Item, Dependent Item, Trigger를 구성하는 논리 Host로 사용한다.
+
+Browser Item 실행을 위해 `selenium/standalone-chrome` 컨테이너를 Docker Compose에 추가하고, Zabbix Server의 Browser poller가 Selenium WebDriver로 접속하도록 설정한다.
+
+### 9.1 Selenium Chrome 및 Browser poller 구성
+
+`docker-compose.yml`에서 Zabbix Server에 WebDriver URL과 Browser poller 수를 설정한다.
+
+```yaml
+zabbix-server:
+  environment:
+    ZBX_WEBDRIVERURL: http://selenium-chrome:4444
+    ZBX_STARTBROWSERPOLLERS: 2
+```
+
+Selenium Chrome 컨테이너는 Browser Item에서 실제 브라우저 실행을 담당한다.
+미디어 업로드 시 Selenium 컨테이너 내부에서 접근 가능한 파일 경로가 필요하므로 테스트용 영상 파일을 읽기 전용 볼륨으로 마운트한다.
+
+```yaml
+selenium-chrome:
+  image: selenium/standalone-chrome:4.21.0
+  container_name: selenium-chrome
+  restart: unless-stopped
+  shm_size: "2gb"
+  expose:
+    - "4444"
+  volumes:
+    - ./zabbix/browser-files:/opt/zabbix/browser-files:ro
+```
+
+### 9.2 Midibus Host 및 매크로
+
+`midibus-web` Host에는 Agent interface를 설정하지 않는다.
+Browser Item에서 사용할 값은 Host macro로 분리한다.
+
+| Macro | 용도 |
+| --- | --- |
+| `{$MIDIBUS_URL}` | Midibus 로그인 URL |
+| `{$MIDIBUS_USER}` | 로그인 사용자 ID |
+| `{$MIDIBUS_PASSWORD}` | 로그인 비밀번호 |
+| `{$MIDIBUS_TEST_PREFIX}` | 테스트 데이터 접두어 |
+| `{$MIDIBUS_TEST_VIDEO_PATH}` | Selenium 컨테이너 내부 테스트 영상 경로 |
+| `{$MIDIBUS_ALLOWED_IP}` | 보안 재생키 허용 IP |
+
+테스트 영상 파일은 다음 경로에 저장한다.
+
+```text
+zabbix/browser-files/zbx-bi-test-video.mp4
+```
+
+Browser Item Parameter에서 사용하는 영상 경로는 Selenium 컨테이너 내부 경로이다.
+
+```text
+/opt/zabbix/browser-files/zbx-bi-test-video.mp4
+```
+
+### 9.3 Browser Item 구성
+
+Midibus 주요 기능 검증을 5개 Browser Item으로 분리하여 구성한다.
+각 Browser Item은 로그인부터 시작하여 독립적으로 실행되도록 구성한다.
+
+| Step | Item name | Key | 검증 내용 |
+| --- | --- | --- | --- |
+| 1 | `Midibus login check` | `midibus_browser_login` | 로그인, 팝업 닫기, 대시보드 확인 |
+| 2 | `Midibus category and channel config check` | `midibus_browser_category_channel` | 카테고리 생성/삭제, VOD 채널 배포 설정 저장 |
+| 3 | `Midibus media upload delete check` | `midibus_browser_media_crud` | 미디어 업로드, 목록 확인, 삭제 확인 |
+| 4 | `Midibus browser secure playback` | `midibus_browser_secure_playback` | 보안 재생키 생성, 배포 URL 적용, 영상 재생 |
+| 5 | `Midibus browser sub user check` | `midibus_browser_sub_user_lifecycle` | 보조 사용자 추가, 권한 변경, 삭제 확인 |
+
+<details>
+<summary><strong>Browser Item substep 목록 보기</strong></summary>
+
+#### Step 1. 로그인 확인
+
+1. Midibus 로그인 페이지 접속
+2. ID, PW 입력
+3. 로그인 버튼 클릭
+4. 로그인 직후 표시되는 튜토리얼/안내 팝업 닫기
+5. 대시보드 메뉴 또는 로그인 후 화면 요소 확인
+6. `dashboard usable` performance mark 기록
+
+#### Step 2. 카테고리 생성 및 채널 배포 설정
+
+1. Midibus 로그인
+2. 튜토리얼/안내 팝업 닫기
+3. 미디어 메뉴 열기
+4. 카테고리 추가 버튼 클릭
+5. 테스트 접두어 기반 카테고리명 입력
+6. 카테고리 추가 버튼 클릭
+7. 설정 메뉴로 이동
+8. 카테고리 탭 선택
+9. 생성한 카테고리 선택
+10. 카테고리 삭제 버튼 클릭
+11. 브라우저 alert 확인
+12. 삭제 후 카테고리가 목록에서 제거되었는지 확인
+13. VOD 채널 탭 선택
+14. 채널 URL 사용 여부 체크박스 변경
+15. 저장 버튼 클릭
+16. `save channel config` performance mark 기록
+
+#### Step 3. 미디어 업로드, 확인, 삭제
+
+1. Midibus 로그인
+2. 튜토리얼/안내 팝업 닫기
+3. 미디어 업로드 버튼 클릭
+4. Selenium 컨테이너 내부 테스트 영상 파일 선택
+5. 업로드 시작 버튼 클릭
+6. 업로드 처리 대기
+7. 업로드 창 닫기
+8. 미디어 메뉴의 전체 목록으로 이동
+9. 업로드한 미디어 이름 확인
+10. 해당 미디어 체크박스 선택
+11. 작업 선택에서 삭제 선택
+12. 브라우저 alert 확인
+13. 삭제 후 목록에서 미디어가 제거되었는지 확인
+14. `delete media` performance mark 기록
+
+#### Step 4. 보안 재생키 생성 및 영상 재생
+
+1. Midibus 로그인
+2. 튜토리얼/안내 팝업 닫기
+3. 배포 메뉴 열기
+4. 재생 제한 채널로 이동
+5. 테스트 영상 이름 클릭
+6. 보안 재생 키 생성 버튼 클릭
+7. 유효 시간을 1일로 설정
+8. 허용 IP 입력
+9. 재생 키 생성 버튼 클릭
+10. 배포 URL에 적용
+11. 보안 재생키 생성 창 닫기
+12. 배포 URL을 새 브라우저 페이지로 열기
+13. JW Player 재생 버튼 클릭
+14. `play secure video` performance mark 기록
+
+#### Step 5. 보조 사용자 추가, 권한 변경, 삭제
+
+1. Midibus 로그인
+2. 튜토리얼/안내 팝업 닫기
+3. 프로필 메뉴 열기
+4. 보조 사용자 화면으로 이동
+5. 보조 사용자 추가 버튼 클릭
+6. 계정 등급을 마스터로 선택
+7. 테스트 이메일, 비밀번호, 이름, 연락처 입력
+8. 저장 버튼 클릭
+9. 저장 후 목록 갱신 대기
+10. 생성된 보조 사용자 이름 클릭
+11. 계정 등급을 사용자로 변경
+12. 저장 버튼 클릭
+13. 저장 후 목록 갱신 대기
+14. 삭제 버튼 클릭
+15. 브라우저 alert 확인
+16. 삭제 후 목록에서 보조 사용자가 제거되었는지 확인
+17. `delete sub user` performance mark 기록
+
+</details>
+
+<details>
+<summary><strong>Browser Item 설정 화면 보기</strong></summary>
+
+<p><sub>Step 1. 로그인 확인 Browser Item 설정</sub></p>
+
+<img src="images/screenshots/week3/browser_item_setting/bi_setting_login_check.png" alt="bi_setting_login_check" width="720">
+
+<p><sub>Step 2. 카테고리 생성/삭제 및 채널 배포 설정 Browser Item 설정</sub></p>
+
+<img src="images/screenshots/week3/browser_item_setting/bi_setting_category_channel.png" alt="bi_setting_category_channel" width="720">
+
+<p><sub>Step 3. 미디어 업로드/삭제 Browser Item 설정</sub></p>
+
+<img src="images/screenshots/week3/browser_item_setting/bi_setting_media.png" alt="bi_setting_media" width="720">
+
+<p><sub>Step 4. 보안 재생키 생성 및 영상 재생 Browser Item 설정</sub></p>
+
+<img src="images/screenshots/week3/browser_item_setting/bi_setting_secure_playback.png" alt="bi_setting_secure_playback" width="720">
+
+<p><sub>Step 5. 보조 사용자 관리 Browser Item 설정</sub></p>
+
+<img src="images/screenshots/week3/browser_item_setting/bi_setting_sub_user.png" alt="bi_setting_sub_user" width="720">
+
+</details>
+
+각 Browser Item의 script는 `zabbix/browser-items/` 디렉터리에 보관한다.
+각 Browser Item의 Type of information은 JSON 결과를 저장하기 위해 `Text`로 설정한다.
+실행 결과는 Browser Item 원본 값에 JSON 형태로 저장되며, Trigger 판단에는 Dependent Item을 사용한다.
+
+### 9.4 Browser Item 실행 결과 검증 구조
+
+Browser Item은 실행 결과를 Text JSON으로 반환하므로, Trigger에서 바로 성공/실패를 판단하기 어렵다.
+따라서 원본 Browser Item마다 Dependent Item을 생성하여 실행 상태와 기능 검증 상태를 숫자값으로 변환한다.
+
+| Dependent Item 종류 | Type of information | 용도 |
+| --- | --- | --- |
+| `execution.status` | Numeric unsigned | Browser Item 실행 자체가 실패했는지 판단 |
+| `execution.message` | Text | 실행 실패 시 오류 메시지 표시 |
+| `validation.status` | Numeric unsigned | 기대한 기능 검증 mark가 기록되었는지 판단 |
+
+<p><sub>Browser Item 및 Dependent Item 정상 실행 결과</sub></p>
+
+<img src="images/screenshots/week3/browser_item_latest_data.png" alt="browser_item_latest_data" width="720">
+
+`execution.status`는 Browser Item 결과 JSON에 `error.message`가 있으면 `0`, 없으면 `1`을 반환한다.
+
+```javascript
+var data = JSON.parse(value);
+
+if (data.error && data.error.message) {
+    return 0;
+}
+
+return 1;
+```
+
+`execution.message`는 실패 시 시나리오 이름과 오류 메시지를 반환하고, 정상일 때는 빈 문자열을 반환한다.
+
+```javascript
+var data = JSON.parse(value);
+
+if (data.error && data.error.message) {
+    return "media_crud: " + data.error.message;
+}
+
+return "";
+```
+
+`validation.status`는 Browser Item 결과 JSON의 performance mark에 기대한 최종 성공 mark가 있는지 확인한다.
+
+```javascript
+var data = JSON.parse(value);
+
+if (data.error && data.error.message) {
+    return 1;
+}
+
+var expectedMark = "delete media";
+var marks = [];
+
+if (data.performance_data && data.performance_data.marks) {
+    marks = data.performance_data.marks;
+}
+
+if (
+    data.performance_data &&
+    data.performance_data.details &&
+    data.performance_data.details.marks
+) {
+    marks = data.performance_data.details.marks;
+}
+
+for (var i = 0; i < marks.length; i++) {
+    if (marks[i].name === expectedMark) {
+        return 1;
+    }
+}
+
+return 0;
+```
+
+각 시나리오의 최종 성공 mark는 다음과 같다.
+
+| 시나리오 | validation expected mark |
+| --- | --- |
+| 로그인 | `dashboard usable` |
+| 카테고리/채널 설정 | `save channel config` |
+| 미디어 업로드/삭제 | `delete media` |
+| 보안 재생키 재생 | `play secure video` |
+| 보조 사용자 관리 | `delete sub user` |
+
+### 9.5 Browser Item Trigger 구성
+
+Browser Item 관련 Trigger는 2개로 구성한다.
+
+| Trigger name | Severity | 목적 |
+| --- | --- | --- |
+| `Browser Item execution failed` | High | Browser Item 스크립트 실행 실패 감지 |
+| `Midibus feature validation failed` | High | 로그인 또는 주요 기능 검증 실패 감지 |
+
+`Browser Item execution failed` Trigger는 5개 `execution.status` Dependent Item 중 하나라도 `0`이면 발생한다.
+
+```text
+last(/midibus-web/midibus.browser.login.execution.status)=0
+or last(/midibus-web/midibus.browser.category_channel.execution.status)=0
+or last(/midibus-web/midibus.browser.media_crud.execution.status)=0
+or last(/midibus-web/midibus.browser.secure_playback.execution.status)=0
+or last(/midibus-web/midibus.browser.sub_user_lifecycle.execution.status)=0
+```
+
+Trigger의 Operational data에는 각 `execution.message` 값을 표시하여 어떤 시나리오에서 어떤 오류가 발생했는지 확인할 수 있도록 한다.
+
+```text
+login: {midibus-web:midibus.browser.login.execution.message.last()}
+category/channel: {midibus-web:midibus.browser.category_channel.execution.message.last()}
+media CRUD: {midibus-web:midibus.browser.media_crud.execution.message.last()}
+secure playback: {midibus-web:midibus.browser.secure_playback.execution.message.last()}
+sub user lifecycle: {midibus-web:midibus.browser.sub_user_lifecycle.execution.message.last()}
+```
+
+`Midibus feature validation failed` Trigger는 5개 `validation.status` Dependent Item 중 하나라도 `0`이면 발생한다.
+
+```text
+last(/midibus-web/midibus.browser.login.validation.status)=0
+or last(/midibus-web/midibus.browser.category_channel.validation.status)=0
+or last(/midibus-web/midibus.browser.media_crud.validation.status)=0
+or last(/midibus-web/midibus.browser.secure_playback.validation.status)=0
+or last(/midibus-web/midibus.browser.sub_user_lifecycle.validation.status)=0
+```
+
+### 9.6 Browser Item Email 알림
+
+Browser Item 관련 알림은 기존 Email Media type과 사용자 Media 설정을 사용한다.
+Trigger별 메시지 제목은 실행 실패와 기능 검증 실패가 구분되도록 구성한다.
+
+Browser Item 실행 실패 알림 제목:
+
+```text
+[PROBLEM][Midibus Browser Execution] {HOST.NAME} - {TRIGGER.NAME}
+[RESOLVED][Midibus Browser Execution] {HOST.NAME} - {TRIGGER.NAME}
+```
+
+Midibus 기능 검증 실패 알림 제목:
+
+```text
+[PROBLEM][Midibus Feature Validation] {HOST.NAME} - {TRIGGER.NAME}
+[RESOLVED][Midibus Feature Validation] {HOST.NAME} - {TRIGGER.NAME}
+```
+
+알림 본문에는 `{EVENT.OPDATA}`를 포함하여 Trigger의 Operational data에 기록된 실행 실패 메시지를 함께 확인한다.
+
+```text
+Host: {HOST.NAME}
+Time: {EVENT.DATE} {EVENT.TIME}
+Severity: {TRIGGER.SEVERITY}
+Problem: {TRIGGER.NAME}
+
+Details:
+{EVENT.OPDATA}
+
+Event ID: {EVENT.ID}
+```
+
+### 9.7 Zabbix Export
+
+Browser Item, Dependent Item, Trigger 구성이 포함된 `midibus-web` Host export 파일은 다음 경로에 보관한다.
+
+```text
+zabbix/export/zbx_export_hosts_midibus-web.xml
+```
+
+Midibus 계정, 비밀번호, 허용 IP와 같은 민감한 매크로 값은 실제 값 대신 placeholder로 마스킹한다.
+따라서 XML import 후 `{$MIDIBUS_USER}`, `{$MIDIBUS_PASSWORD}`, `{$MIDIBUS_ALLOWED_IP}` 값은 Zabbix UI에서 실제 테스트 환경에 맞게 다시 설정해야 한다.
+
+
+</details>
+
+<details>
+<summary><strong>10. Browser Item 장애 테스트 방법</strong></summary>
+
+## 10. Browser Item 장애 테스트 방법
+
+Browser Item 장애 테스트는 Midibus 실제 서비스 데이터에 영향을 최소화하는 방식으로 수행한다.
+실행 실패와 기능 검증 실패를 분리하여 테스트함으로써 두 Trigger가 각각 의도한 조건에서 동작하는지 확인한다.
+
+### 10.1 Browser Item 실행 실패 테스트
+
+`Browser Item execution failed` Trigger는 Browser Item 실행 결과에 오류가 발생했을 때 동작하는지 확인한다.
+테스트는 `{$MIDIBUS_PASSWORD}` Host macro 값을 임시로 잘못된 값으로 변경하여 로그인 실패를 유도하는 방식으로 수행했다.
+
+테스트 절차:
+
+1. `midibus-web` Host macro에서 `{$MIDIBUS_PASSWORD}` 값을 임시 오입력한다.
+2. Browser Item을 실행하여 로그인 실패를 발생시킨다.
+3. `execution.status` 값이 `0`으로 변경되는지 확인한다.
+4. `execution.message`에 실패한 시나리오와 오류 메시지가 기록되는지 확인한다.
+5. `Browser Item execution failed` Trigger가 `PROBLEM` 상태로 전환되고 Email 알림이 수신되는지 확인한다.
+6. `{$MIDIBUS_PASSWORD}` 값을 원래 값으로 복구한 뒤 Browser Item을 다시 실행한다.
+7. Trigger가 `RESOLVED` 상태로 전환되고 복구 Email 알림이 수신되는지 확인한다.
+
+기대 결과:
+
+* 실행 실패 시 `execution.status`는 `0`이 된다.
+* 실행 실패 원인은 `execution.message`에서 확인할 수 있다.
+* 실행 실패 상황에서는 `Browser Item execution failed` Trigger만 장애로 판단한다.
+* 복구 후 `execution.status`가 `1`로 돌아오고 Trigger가 `RESOLVED` 상태가 된다.
+
+<details>
+<summary><strong>실행 실패 테스트 스크린샷 보기</strong></summary>
+
+
+<p><sub>장애 발생 전 Browser Item 정상 상태</sub></p>
+
+<img src="images/screenshots/week3/scenario_1/browser_item_latest_data_before.png" alt="browser_item_latest_data_before" width="720">
+
+
+<p><sub>로그인 실패 후 execution.status 0 확인</sub></p>
+
+<img src="images/screenshots/week3/scenario_1/browser_item_latest_data_during.png" alt="browser_item_latest_data_during" width="720">
+
+
+<p><sub>Browser Item 실행 실패 Trigger PROBLEM 전환</sub></p>
+
+<img src="images/screenshots/week3/scenario_1/browser_item_problem.png" alt="browser_item_problem" width="720">
+
+
+<p><sub>Browser Item 실행 실패 알림 메일 수신</sub></p>
+
+<img src="images/screenshots/week3/scenario_1/browser_item_problem_mail.png" alt="browser_item_problem_mail" width="420">
+
+
+<p><sub>매크로 원복 후 Browser Item 정상 상태</sub></p>
+
+<img src="images/screenshots/week3/scenario_1/browser_item_latest_data_after.png" alt="browser_item_latest_data_after" width="720">
+
+
+<p><sub>Browser Item 실행 실패 Trigger RESOLVED 전환</sub></p>
+
+<img src="images/screenshots/week3/scenario_1/browser_item_resolved.png" alt="browser_item_resolved" width="720">
+
+
+<p><sub>Browser Item 실행 실패 복구 알림 메일 수신</sub></p>
+
+<img src="images/screenshots/week3/scenario_1/browser_item_resolved_mail.png" alt="browser_item_resolved_mail" width="420">
+
+</details>
+
+### 10.2 Midibus 기능 검증 실패 테스트
+
+`Midibus feature validation failed` Trigger는 Browser Item 스크립트 실행은 성공했지만 기대한 기능 검증 mark가 없을 때 동작하는지 확인한다.
+테스트는 보안 재생키 재생 시나리오의 validation expected mark를 임시로 `play secure video`에서 `intentional failure test`로 변경하여 수행했다.
+
+테스트 절차:
+
+1. `midibus.browser.secure_playback.validation.status` Dependent Item의 preprocessing script에서 expected mark를 임시 변경한다.
+2. 기존 값 `play secure video`를 `intentional failure test`로 변경한다.
+3. `midibus_browser_secure_playback` Browser Item을 실행한다.
+4. Browser Item 실행 자체는 성공하여 `execution.status`가 `1`인지 확인한다.
+5. 기대한 validation mark를 찾지 못해 `validation.status`가 `0`으로 변경되는지 확인한다.
+6. `Midibus feature validation failed` Trigger가 `PROBLEM` 상태로 전환되고 Email 알림이 수신되는지 확인한다.
+7. expected mark를 `play secure video`로 원복한 뒤 Browser Item을 다시 실행한다.
+8. `validation.status`가 `1`로 돌아오고 Trigger가 `RESOLVED` 상태로 전환되는지 확인한다.
+
+기대 결과:
+
+* 스크립트 실행 자체는 성공하므로 `execution.status`는 `1`을 유지한다.
+* 기능 검증 mark가 없으므로 `validation.status`는 `0`이 된다.
+* 기능 검증 실패 상황에서는 `Midibus feature validation failed` Trigger가 장애로 판단한다.
+* expected mark를 원복하고 재실행하면 Trigger가 `RESOLVED` 상태가 된다.
+
+<details>
+<summary><strong>기능 검증 실패 테스트 스크린샷 보기</strong></summary>
+
+
+<p><sub>validation expected mark 임시 변경</sub></p>
+
+<img src="images/screenshots/week3/scenario_2/midibus_change_script.png" alt="midibus_change_script" width="720">
+
+
+<p><sub>기능 검증 실패 중 validation.status 0 확인</sub></p>
+
+<img src="images/screenshots/week3/scenario_2/midibus_latest_data_during.png" alt="midibus_latest_data_during" width="720">
+
+
+<p><sub>Midibus 기능 검증 실패 Trigger PROBLEM 전환</sub></p>
+
+<img src="images/screenshots/week3/scenario_2/midibus_problem.png" alt="midibus_problem" width="720">
+
+
+<p><sub>Midibus 기능 검증 실패 알림 메일 수신</sub></p>
+
+<img src="images/screenshots/week3/scenario_2/midibus_problem_mail.png" alt="midibus_problem_mail" width="420">
+
+
+<p><sub>expected mark 원복 후 validation.status 1 확인</sub></p>
+
+<img src="images/screenshots/week3/scenario_2/midibus_latest_data_after.png" alt="midibus_latest_data_after" width="720">
+
+
+<p><sub>Midibus 기능 검증 실패 Trigger RESOLVED 전환</sub></p>
+
+<img src="images/screenshots/week3/scenario_2/midibus_resolved.png" alt="midibus_resolved" width="720">
+
+
+<p><sub>Midibus 기능 검증 실패 복구 알림 메일 수신</sub></p>
+
+<img src="images/screenshots/week3/scenario_2/midibus_resolved_mail.png" alt="midibus_resolved_mail" width="420">
+
+</details>
+
+
+</details>
+
+<details>
+<summary><strong>11. 트러블슈팅</strong></summary>
+
+## 11. 트러블슈팅
+### 11.1 Zabbix Agent2 Not Available
 
 * 증상: Zabbix UI에서 `Zabbix agent is not available` 문제 발생
 * 원인: Zabbix Host의 Agent Interface가 Docker 내부 Agent2 컨테이너 주소와 일치하지 않음
@@ -713,7 +1340,7 @@ docker exec zabbix-server sh -c 'wget -qO- http://nginx/status >/dev/null'
   * `docker-compose.yml`에서 `ZBX_HOSTNAME`을 `Zabbix server`로 설정
   * Zabbix UI에서 `Zabbix server` Host의 Agent Interface를 DNS `zabbix-agent2`, Port `10050`으로 수정
 
-### 9.2 Action Log: No media defined for user
+### 11.2 Action Log: No media defined for user
 
 * 증상:
 
@@ -735,3 +1362,27 @@ No media defined for user
   * `Users` > `Users` > `Admin` > `Media`에서 Email Media를 추가
   * 수신 이메일 주소, 활성 시간, Severity 조건을 설정
   * Action을 저장한 뒤 기존 Problem이 아니라 새로운 Problem 이벤트를 발생시켜 다시 테스트
+
+### 11.3 Browser Item 한글 텍스트 Selector 실패
+
+* 증상:
+
+  * Browser Item Test 결과 JSON을 확인했을 때 특정 단계까지는 정상 진행되지만, 이후 버튼 클릭 단계에서 스크립트가 중단됨
+  * 화면에는 버튼이 존재하지만 Browser Item에서는 해당 버튼을 찾지 못하거나 클릭하지 못하는 오류가 발생함
+  * 특히 `추가`, `저장`, `삭제`, `재생`처럼 한글 UI 텍스트를 기준으로 찾는 selector에서 문제가 발생할 수 있었음
+
+* 원인:
+
+  * Browser Item JavaScript를 Zabbix UI에 입력하거나 파일로 정리하는 과정에서 한글 문자열이 깨지거나 다르게 전달될 수 있음
+  * 한글 버튼 텍스트 기반 XPath는 인코딩, 공백, 렌더링 상태에 민감하여 안정성이 낮음
+  * Midibus 화면에는 `id`, `onclick`, `type`, `data-bs-target` 등 더 안정적인 HTML 속성이 존재했지만 초기 스크립트 일부는 화면 텍스트 기준으로 요소를 찾고 있었음
+
+* 해결:
+
+  * 한글 UI 텍스트 기반 selector 사용을 줄이고, 가능한 경우 `id`, `onclick`, `type`, `data-bs-target` 기반 selector로 변경
+  * 예를 들어 저장 버튼은 버튼 텍스트 대신 `#vodChannelConfigSaveBtn`, 로그인 입력은 `#username`, 비밀번호 입력은 `input[type='password']`처럼 안정적인 속성으로 참조
+  * 결과 JSON의 performance mark를 확인하여 어느 단계까지 실행되었는지 추적하고, 중단 지점의 selector를 우선 수정
+  * 최종적으로 각 Browser Item은 마지막 성공 mark가 기록되는지 확인하여 시나리오 전체가 끝까지 수행되는지 검증
+
+</details>
+

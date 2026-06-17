@@ -60,7 +60,7 @@
                 </httptest>
             </httptests>
             <inventory>
-                <name>3a23d2a7c815</name>
+                <name>zabbix-agent2</name>
                 <os>Linux version 6.8.0-48-generic (buildd@lcy02-amd64-010) (x86_64-linux-gnu-gcc-13 (Ubuntu 13.2.0-23ubuntu4) 13.2.0, GNU ld (GNU B</os>
                 <location_lat>56.97612</location_lat>
                 <location_lon>24.16553</location_lon>
