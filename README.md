@@ -189,7 +189,70 @@ docker exec zabbix-server sh -c "wget -qO- http://nginx/health"
 docker exec zabbix-server sh -c "wget -qO- http://nginx/status"
 ```
 
-### 5.7 서비스 중지
+### 5.7 최초 기동 후 Zabbix UI 초기 구성
+
+새 PC 또는 새 VM에서 처음 기동한 경우 Docker 컨테이너만 실행하면 Zabbix DB에는 프로젝트 설정이 아직 들어 있지 않다.
+따라서 Zabbix Web UI에 접속한 뒤 Host export XML import, Media type, 사용자 Media, Host macro, Trigger Action을 추가로 설정한다.
+
+Zabbix Web UI 접속 정보는 다음과 같다.
+
+```text
+URL: http://<VM_PUBLIC_IP>:8080
+Username: Admin
+Password: zabbix
+```
+
+초기 구성 순서는 다음과 같이 진행한다.
+
+| 순서 | 작업 | 위치 | 참고 |
+| --- | --- | --- | --- |
+| 1 | Zabbix Host export XML import | `Data collection` > `Hosts` > `Import` | 아래 XML 3개 파일 import |
+| 2 | Host Agent interface 확인 | `Data collection` > `Hosts` | `Zabbix server`는 `zabbix-agent2`, `nginx-sample`은 `nginx-agent2` DNS 사용 |
+| 3 | Midibus Host macro 실제 값 입력 | `midibus-web` > `Macros` | 계정, 비밀번호, 허용 IP 등 민감 값은 XML에서 placeholder로 마스킹되어 있음 |
+| 4 | Email Media type 설정 | `Alerts` > `Media types` > `Email` | SMTP 서버, 포트, 인증 정보 설정 후 `Test` 수행 |
+| 5 | Admin 사용자 Media 등록 | `Users` > `Users` > `Admin` > `Media` | Type `Email`, 수신 주소, 활성 시간, Severity 설정 |
+| 6 | Trigger Action 등록 | `Alerts` > `Actions` > `Trigger actions` | Web Scenario, nginx 내부 지표, Browser Item용 Action 등록 |
+| 7 | 수집 및 알림 동작 확인 | `Monitoring` / `Reports` | Latest data, Problems, Action log, 메일 수신 확인 |
+
+Import 대상 XML 파일은 다음과 같다.
+
+| XML 파일 | 포함 내용 |
+| --- | --- |
+| `zabbix/export/zbx_export_hosts_Zabbix-server.xml` | `Zabbix server` Host, nginx Web Scenario, Web Scenario Trigger |
+| `zabbix/export/zbx_export_hosts_nginx-sample.xml` | `nginx-sample` Host, nginx 내부 지표 Item, nginx 내부 지표 Trigger |
+| `zabbix/export/zbx_export_hosts_midibus-web.xml` | `midibus-web` Host, Browser Item, Dependent Item, Browser Item Trigger |
+
+`midibus-web` Host에서 실제 환경에 맞게 다시 설정해야 하는 주요 macro는 다음과 같다.
+
+```text
+{$MIDIBUS_URL}
+{$MIDIBUS_USER}
+{$MIDIBUS_PASSWORD}
+{$MIDIBUS_TEST_PREFIX}
+{$MIDIBUS_TEST_VIDEO_PATH}
+{$MIDIBUS_ALLOWED_IP}
+```
+
+`{$MIDIBUS_TEST_VIDEO_PATH}`는 Selenium 컨테이너 내부 경로를 사용한다.
+
+```text
+/opt/zabbix/browser-files/zbx-bi-test-video.mp4
+```
+
+Trigger Action은 Host export XML에 포함되지 않으므로 새 환경에서는 직접 등록해야 한다.
+본 프로젝트에서 사용한 Action은 다음 4개이다.
+
+```text
+Midibus Browser Execution Failure
+Midibus Feature Validation Failure
+Notify nginx internal trigger problems
+Notify nginx web scenario problem
+```
+
+각 Action의 조건, Operation, Recovery operation 설정값은 7.6 알람 발송 설정과 9.6 Browser Item Email 알림을 기준으로 등록한다.
+초기 구성 후에는 Web Scenario 최신 데이터, Browser Item 최신 데이터, `Reports` > `Action log`의 발송 결과를 확인한다.
+
+### 5.8 서비스 중지
 
 전체 서비스를 중지하려면 다음 명령어를 실행한다.
 
@@ -432,6 +495,27 @@ Send only to: Email
 [PROBLEM] {EVENT.NAME}
 [RESOLVED] {EVENT.NAME}
 ```
+
+<details>
+<summary><strong>Trigger Action 설정 스크린샷</strong></summary>
+
+<p><sub>Trigger actions 창 예시</sub></p>
+
+<img src="images/screenshots/week2/action_trigger.png" alt="trigger_actions_list" width="700">
+
+<p><sub>Trigger actions - Action 예시</sub></p>
+
+<img src="images/screenshots/week2/action_trigger_action.png" alt="trigger_action_operations" width="700">
+
+<p><sub>Trigger actions - Operations 예시</sub></p>
+
+<img src="images/screenshots/week2/action_trigger_operations.png" alt="trigger_action_operations" width="700">
+
+<p><sub>Trigger actions - Operations - Edit - Operation details 예시</sub></p>
+
+<img src="images/screenshots/week2/action_operation_details.png" alt="trigger_action_operation_details" width="700">
+
+</details>
 
 알람 설정 후 장애 테스트를 수행하고 `Reports` > `Action log`에서 메일 발송 결과가 `Sent`로 기록되는지 확인한다.
 
@@ -820,17 +904,6 @@ docker exec zabbix-server sh -c 'wget -qO- http://nginx/status >/dev/null'
 
 </details>
 
-### 8.6 Zabbix Export
-
-Web Scenario 및 nginx 내부 지표 Trigger 구성이 포함된 Zabbix Host export 파일은 다음 경로에 보관한다.
-
-```text
-zabbix/export/zbx_export_hosts_Zabbix-server.xml
-zabbix/export/zbx_export_hosts_nginx-sample.xml
-```
-
-
-
 </details>
 
 <details>
@@ -1177,18 +1250,6 @@ Details:
 
 Event ID: {EVENT.ID}
 ```
-
-### 9.7 Zabbix Export
-
-Browser Item, Dependent Item, Trigger 구성이 포함된 `midibus-web` Host export 파일은 다음 경로에 보관한다.
-
-```text
-zabbix/export/zbx_export_hosts_midibus-web.xml
-```
-
-Midibus 계정, 비밀번호, 허용 IP와 같은 민감한 매크로 값은 실제 값 대신 placeholder로 마스킹한다.
-따라서 XML import 후 `{$MIDIBUS_USER}`, `{$MIDIBUS_PASSWORD}`, `{$MIDIBUS_ALLOWED_IP}` 값은 Zabbix UI에서 실제 테스트 환경에 맞게 다시 설정해야 한다.
-
 
 </details>
 
