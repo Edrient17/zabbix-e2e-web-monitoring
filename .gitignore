@@ -26,6 +26,8 @@ postgres-data/
 *.tmp
 *.bak
 *.backup
+__pycache__/
+*.pyc
 
 # Report build outputs
 *.aux

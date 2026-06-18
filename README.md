@@ -212,7 +212,8 @@ Password: zabbix
 | 4 | Email Media type 설정 | `Alerts` > `Media types` > `Email` | SMTP 서버, 포트, 인증 정보 설정 후 `Test` 수행 |
 | 5 | Admin 사용자 Media 등록 | `Users` > `Users` > `Admin` > `Media` | Type `Email`, 수신 주소, 활성 시간, Severity 설정 |
 | 6 | Trigger Action 등록 | `Alerts` > `Actions` > `Trigger actions` | Web Scenario, nginx 내부 지표, Browser Item용 Action 등록 |
-| 7 | 수집 및 알림 동작 확인 | `Monitoring` / `Reports` | Latest data, Problems, Action log, 메일 수신 확인 |
+| 7 | Dashboard 생성 | Zabbix API | `zabbix/api/create_dashboard.py` 실행 |
+| 8 | 수집 및 알림 동작 확인 | `Monitoring` / `Reports` | Latest data, Problems, Action log, 메일 수신 확인 |
 
 Import 대상 XML 파일은 다음과 같다.
 
@@ -250,7 +251,31 @@ Notify nginx web scenario problem
 ```
 
 각 Action의 조건, Operation, Recovery operation 설정값은 7.6 알람 발송 설정과 9.6 Browser Item Email 알림을 기준으로 등록한다.
-초기 구성 후에는 Web Scenario 최신 데이터, Browser Item 최신 데이터, `Reports` > `Action log`의 발송 결과를 확인한다.
+
+Dashboard는 Zabbix API로 생성한다.
+기본 접속 정보(`Admin` / `zabbix`)를 그대로 사용하는 경우 다음 명령어로 생성할 수 있다.
+
+```bash
+python3 zabbix/api/create_dashboard.py
+```
+
+Zabbix 관리자 비밀번호를 변경한 경우에는 환경 변수로 API 접속 정보를 지정한다.
+
+```bash
+export ZABBIX_URL="http://<VM_PUBLIC_IP>:8080/api_jsonrpc.php"
+export ZABBIX_USER="Admin"
+export ZABBIX_PASSWORD="<ZABBIX_ADMIN_PASSWORD>"
+python3 zabbix/api/create_dashboard.py
+```
+
+동일한 이름의 Dashboard가 이미 있으면 중복 생성하지 않는다.
+기존 Dashboard를 삭제하고 다시 생성해야 하는 경우에는 `--replace` 옵션을 사용한다.
+
+```bash
+python3 zabbix/api/create_dashboard.py --replace
+```
+
+초기 구성 후에는 Dashboard, Web Scenario 최신 데이터, Browser Item 최신 데이터, `Reports` > `Action log`의 발송 결과를 확인한다.
 
 ### 5.8 서비스 중지
 
