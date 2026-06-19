@@ -174,36 +174,18 @@ zabbix-server
 zabbix-web
 ```
 
-### 5.5 nginx 샘플 앱 확인
-
-VM 내부에서 nginx 샘플 앱의 주요 경로가 정상 응답하는지 확인한다.
-
-```bash
-curl -i http://127.0.0.1/
-curl -i http://127.0.0.1/health
-curl -i http://127.0.0.1/status
-```
-- 정상 기동 예시
-
-<img src="images/screenshots/week1/screenshot_3_nginx_sample_test.png" alt="nginx_sample_screenshot" width="500">
-
-nginx 설정 문법은 다음 명령어로 확인한다.
-
-```bash
-docker exec nginx-sample nginx -t
-```
-
-### 5.6 Zabbix Server에서 nginx 접근 확인
+### 5.5 Zabbix Server에서 nginx 접근 확인
 
 Web Scenario는 Zabbix Web UI가 아니라 `zabbix-server` 컨테이너에서 실행되므로, `zabbix-server` 컨테이너가 Docker 내부 네트워크로 nginx에 접근 가능한지 확인한다.
+Basic Auth가 적용되어 있으므로 `<BASE64_USER_PASSWORD>`는 `.env`의 `NGINX_BASIC_AUTH_HEADER` 값으로 치환한다.
 
 ```bash
-docker exec zabbix-server sh -c "wget -qO- http://nginx/"
-docker exec zabbix-server sh -c "wget -qO- http://nginx/health"
-docker exec zabbix-server sh -c "wget -qO- http://nginx/status"
+docker exec zabbix-server sh -c "wget --header 'Authorization: Basic <BASE64_USER_PASSWORD>' -qO- http://nginx/"
+docker exec zabbix-server sh -c "wget --header 'Authorization: Basic <BASE64_USER_PASSWORD>' -qO- http://nginx/health"
+docker exec zabbix-server sh -c "wget --header 'Authorization: Basic <BASE64_USER_PASSWORD>' -qO- http://nginx/status"
 ```
 
-### 5.7 최초 기동 후 Zabbix UI 초기 구성
+### 5.6 최초 기동 후 Zabbix UI 초기 구성
 
 새 PC 또는 새 VM에서 처음 기동한 경우 Docker 컨테이너만 실행하면 Zabbix DB에는 프로젝트 설정이 아직 들어 있지 않다.
 따라서 Zabbix Web UI에 접속한 뒤 Host export XML import, Media type, 사용자 Media, Host macro, Trigger Action을 추가로 설정한다.
@@ -279,10 +261,17 @@ Dashboard 생성 스크립트를 Zabbix가 실행 중인 VM 내부에서 실행�
 외부 PC에서 실행할 때만 `<VM_PUBLIC_IP>`를 사용한다.
 
 ```bash
-export ZABBIX_URL="http://127.0.0.1:8080/api_jsonrpc.php"
-export ZABBIX_USER="Admin"
-export ZABBIX_PASSWORD="<ZABBIX_ADMIN_PASSWORD>"
+ZABBIX_URL="http://127.0.0.1:8080/api_jsonrpc.php" \
+ZABBIX_USER="Admin" \
+ZABBIX_PASSWORD="<ZABBIX_ADMIN_PASSWORD>" \
 python3 zabbix/api/create_dashboard.py
+```
+
+Zabbix API 접속 정보는 민감 정보이므로 `export`로 세션에 계속 남기지 않고 위처럼 일회성 환경 변수로 실행한다.
+이미 `export`로 설정했다면 Dashboard 적용 후 다음 명령어로 현재 셸에서 삭제한다.
+
+```bash
+unset ZABBIX_URL ZABBIX_USER ZABBIX_PASSWORD
 ```
 
 동일한 이름의 Dashboard가 이미 있으면 중복 생성하지 않는다.
@@ -294,7 +283,7 @@ python3 zabbix/api/create_dashboard.py --replace
 
 초기 구성 후에는 Dashboard, Web Scenario 최신 데이터, Browser Item 최신 데이터, `Reports` > `Action log`의 발송 결과를 확인한다.
 
-### 5.8 서비스 중지
+### 5.7 서비스 중지
 
 전체 서비스를 중지하려면 다음 명령어를 실행한다.
 
