@@ -33,6 +33,11 @@ function acceptAlertIfPresent() {
     }
 }
 
+function isChecked(el) {
+    var checked = el.getProperty("checked");
+    return checked === true || checked === "true";
+}
+
 try {
     var params = JSON.parse(value);
     var categoryName = params.testPrefix + "-category-" + (new Date()).getTime();
@@ -94,20 +99,16 @@ try {
     findRequired("xpath", "//button[@id='vodChannelTab-tab']", "vod channel tab").click();
 
     var channelUrl = findRequired("xpath", "//input[@id='channelUrl']", "channel url checkbox");
-    var checked = channelUrl.getProperty("checked");
-
-    if (checked !== true && checked !== "true") {
-        channelUrl.click();
-    }
+    var expectedChecked = isChecked(channelUrl);
 
     findRequired("xpath", "//button[@id='vodChannelConfigSaveBtn']", "vod channel config save button").click();
     acceptAlertIfPresent();
 
     channelUrl = findRequired("xpath", "//input[@id='channelUrl']", "channel url checkbox after save");
-    checked = channelUrl.getProperty("checked");
+    var actualChecked = isChecked(channelUrl);
 
-    if (checked !== true && checked !== "true") {
-        throw Error("channel URL checkbox is not enabled after save");
+    if (actualChecked !== expectedChecked) {
+        throw Error("channel URL checkbox changed after save: expected " + expectedChecked + ", got " + actualChecked);
     }
 
     browser.collectPerfEntries("save channel config");
