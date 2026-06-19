@@ -31,7 +31,12 @@
                     <interface_ref>if1</interface_ref>
                     <triggers>
                         <trigger>
-                            <expression>last(/nginx-sample/system.run[sh /var/lib/zabbix/user_scripts/nginx_active_connections.sh])&gt;50</expression>
+                            <expression>last(/nginx-sample/system.run[sh /var/lib/zabbix/user_scripts/nginx_active_connections.sh])&gt;100</expression>
+                            <name>nginx active connections is critically high</name>
+                            <priority>HIGH</priority>
+                        </trigger>
+                        <trigger>
+                            <expression>min(/nginx-sample/system.run[sh /var/lib/zabbix/user_scripts/nginx_active_connections.sh],1m)&gt;50</expression>
                             <name>nginx active connections is high</name>
                             <priority>WARNING</priority>
                         </trigger>
