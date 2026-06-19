@@ -222,18 +222,19 @@ Password: zabbix
 | --- | --- | --- | --- |
 | 1 | Zabbix Host export XML import | `Data collection` > `Hosts` > `Import` | 아래 XML 3개 파일 import |
 | 2 | Host Agent interface 확인 | `Data collection` > `Hosts` | `Zabbix server`는 `zabbix-agent2`, `nginx-sample`은 `nginx-agent2` DNS 사용 |
-| 3 | Midibus Host macro 실제 값 입력 | `midibus-web` > `Macros` | 계정, 비밀번호, 허용 IP 등 민감 값은 XML에서 placeholder로 마스킹되어 있음 |
-| 4 | Email Media type 설정 | `Alerts` > `Media types` > `Email` | SMTP 서버, 포트, 인증 정보 설정 후 `Test` 수행 |
-| 5 | Admin 사용자 Media 등록 | `Users` > `Users` > `Admin` > `Media` | Type `Email`, 수신 주소, 활성 시간, Severity 설정 |
-| 6 | Trigger Action 등록 | `Alerts` > `Actions` > `Trigger actions` | Web Scenario, nginx 내부 지표, Browser Item용 Action 등록 |
-| 7 | Dashboard 생성 | Zabbix API | `zabbix/api/create_dashboard.py` 실행 |
-| 8 | 수집 및 알림 동작 확인 | `Monitoring` / `Reports` | Latest data, Problems, Action log, 메일 수신 확인 |
+| 3 | nginx Web Scenario Basic Auth 비밀번호 입력 | `Zabbix server` > `Web scenarios` > `nginx-web-availability` | XML의 `<NGINX_BASIC_PASSWORD>` placeholder를 실제 nginx Basic Auth 비밀번호로 변경 |
+| 4 | Midibus Host macro 실제 값 입력 | `midibus-web` > `Macros` | 계정, 비밀번호, 허용 IP 등 민감 값은 XML에서 placeholder로 마스킹되어 있음 |
+| 5 | Email Media type 설정 | `Alerts` > `Media types` > `Email` | SMTP 서버, 포트, 인증 정보 설정 후 `Test` 수행 |
+| 6 | Admin 사용자 Media 등록 | `Users` > `Users` > `Admin` > `Media` | Type `Email`, 수신 주소, 활성 시간, Severity 설정 |
+| 7 | Trigger Action 등록 | `Alerts` > `Actions` > `Trigger actions` | Web Scenario, nginx 내부 지표, Browser Item용 Action 등록 |
+| 8 | Dashboard 생성 | Zabbix API | `zabbix/api/create_dashboard.py` 실행 |
+| 9 | 수집 및 알림 동작 확인 | `Monitoring` / `Reports` | Latest data, Problems, Action log, 메일 수신 확인 |
 
 Import 대상 XML 파일은 다음과 같다.
 
 | XML 파일 | 포함 내용 |
 | --- | --- |
-| `zabbix/export/zbx_export_hosts_Zabbix-server.xml` | `Zabbix server` Host, nginx Web Scenario, Web Scenario Trigger |
+| `zabbix/export/zbx_export_hosts_Zabbix-server.xml` | `Zabbix server` Host, nginx Web Scenario, Web Scenario Trigger. Basic Auth 비밀번호는 `<NGINX_BASIC_PASSWORD>`로 마스킹됨 |
 | `zabbix/export/zbx_export_hosts_nginx-sample.xml` | `nginx-sample` Host, nginx 내부 지표 Item, nginx 내부 지표 Trigger |
 | `zabbix/export/zbx_export_hosts_midibus-web.xml` | `midibus-web` Host, Browser Item, Dependent Item, Browser Item Trigger |
 

@@ -40,6 +40,9 @@
                             <value>Zabbix-Web-Monitor/1.0</value>
                         </header>
                     </headers>
+                    <authentication>BASIC</authentication>
+                    <http_user>zabbix-monitor</http_user>
+                    <http_password>&lt;NGINX_BASIC_PASSWORD&gt;</http_password>
                     <steps>
                         <step>
                             <name>root</name>
