@@ -75,6 +75,8 @@ VM 환경에는 다음 소프트웨어가 필요하다.
 
 본 프로젝트는 Docker Compose에 서비스별 포트 사용 목적을 명시하고, 실제 외부 접근 제어는 Cloud VM의 Security Group에서 수행한다.
 Security Group 인바운드 규칙은 허용 목록 방식으로 관리하며, 명시적으로 허용하지 않은 포트와 출발지는 암시적으로 거부된다.
+아웃바운드 규칙은 개발/평가 환경의 Browser Item 실행, 외부 Midibus Web 접속, SMTP 메일 발송, 패키지/이미지 다운로드 등 외부 의존성이 많아 전체 송신을 허용한다.
+운영 환경에서는 외부 서비스 접속 대상이 확정된 뒤 HTTPS, SMTP, IMDS 등 필요한 목적지와 포트만 허용하도록 축소하는 것을 권장한다.
 
 | 컴포넌트             |        포트 | 용도                  | 노출 범위         | Security Group 정책       |
 | ---------------- | --------: | ------------------- | ------------- | ----------------------- |
@@ -84,6 +86,14 @@ Security Group 인바운드 규칙은 허용 목록 방식으로 관리하며, �
 | nginx Agent2     | 10050/tcp | nginx 전용 Agent 통신 포트 | Docker 내부 전용   | 외부 인바운드 허용 규칙 없음      |
 | nginx Sample App |    80/tcp | Web Scenario 테스트 대상 | Docker 내부 전용   | 외부 인바운드 허용 규칙 없음      |
 | PostgreSQL       |  5432/tcp | Zabbix 데이터베이스       | Docker 내부 전용 | 외부 인바운드 허용 규칙 없음      |
+
+Security Group 송신 정책:
+
+| 방향 | 대상 | 정책 |
+| --- | --- | --- |
+| Inbound | `22/tcp`, `8080/tcp` | 관리자 IP 또는 업무망에서만 허용 |
+| Outbound | All traffic | 개발/평가 환경에서는 외부 Browser Item, SMTP, Docker/Git/패키지 다운로드를 위해 허용 |
+| Outbound 운영 권장 | HTTPS, SMTP, IMDS 등 | 실제 운영에서는 필요한 목적지와 포트로 제한 |
 
 Docker Compose에서 호스트에 publish되는 포트는 Zabbix Web UI의 `8080/tcp`뿐이다.
 Zabbix Web Scenario에서는 외부 IP가 아니라 Docker 내부 서비스명인 `nginx`를 사용한다.
@@ -454,7 +464,8 @@ nginx 내부 지표 기반 Trigger는 `nginx-sample` Host에 등록한다.
 
 | Trigger name | Severity | Expression | 목적 |
 | --- | --- | --- | --- |
-| `nginx active connections is high` | Warning | `last(/nginx-sample/system.run[sh /var/lib/zabbix/user_scripts/nginx_active_connections.sh])>50` | nginx active connection 과다 감지 |
+| `nginx active connections is critically high` | High | `last(/nginx-sample/system.run[sh /var/lib/zabbix/user_scripts/nginx_active_connections.sh])>100` | 순간적인 active connection 급증 감지 |
+| `nginx active connections is high` | Warning | `min(/nginx-sample/system.run[sh /var/lib/zabbix/user_scripts/nginx_active_connections.sh],1m)>50` | 1분 이상 지속되는 active connection 과다 감지 |
 | `nginx request counter reset detected` | Information | `change(/nginx-sample/system.run[sh /var/lib/zabbix/user_scripts/nginx_total_requests.sh])<0` | nginx 재시작 또는 request counter 초기화 감지 |
 
 ### 7.6 알람 발송 설정
@@ -509,8 +520,9 @@ nginx 내부 지표 장애 알림 Action:
 | --- | --- |
 | Name | `Notify nginx internal trigger problems` |
 | Type of calculation | `And/Or` |
-| Condition A | `Trigger equals nginx-sample: nginx active connections is high` |
-| Condition B | `Trigger equals nginx-sample: nginx request counter reset detected` |
+| Condition A | `Trigger equals nginx-sample: nginx active connections is critically high` |
+| Condition B | `Trigger equals nginx-sample: nginx active connections is high` |
+| Condition C | `Trigger equals nginx-sample: nginx request counter reset detected` |
 | Enabled | checked |
 
 각 Action의 `Operations`에는 장애 발생 메일을 등록한다.
@@ -792,48 +804,48 @@ docker exec nginx-sample nginx -s reload
 
 ### 8.4 nginx active connections 증가 테스트
 
-active connection 수가 50을 초과하도록 nginx에 임시 slow endpoint를 추가한다. 테스트 전 원본 설정을 백업한다.
+active connection 부하는 `scripts/nginx_load_test.sh`의 `active` 모드로 발생시킨다.
+`nginx.conf`에는 테스트용 `/load-slow` endpoint가 포함되어 있으며, 이 endpoint는 응답을 천천히 내려보내 Zabbix 수집 주기 동안 connection이 유지되도록 한다.
+
+현재 nginx 내부 지표 Item은 `30s` 주기로 수집된다.
+따라서 Warning Trigger인 `min(1m)>50`을 검증하려면 active connection 50 초과 상태가 최소 1분 이상 유지되어야 한다.
+
+먼저 기준값을 확인한다.
 
 ```bash
-cp nginx/conf.d/default.conf nginx/conf.d/default.conf.bak
+sh scripts/nginx_load_test.sh status
 ```
 
-`nginx/conf.d/default.conf`에 다음 location을 임시로 추가한다.
-
-```nginx
-location /slow {
-    default_type text/plain;
-    limit_rate 1;
-    return 200 "slow connection test data data data data data data data data data data\n";
-}
-```
-
-변경한 설정을 nginx에 반영한다.
+Warning Trigger 검증을 위해 60개 동시 연결을 90초 동안 유지한다.
 
 ```bash
-docker exec nginx-sample nginx -s reload
-```
-
-Zabbix Server 컨테이너에서 `/slow`로 다수의 동시 요청을 발생시킨다.
-
-```bash
-docker exec zabbix-server sh -c 'for i in $(seq 1 60); do wget -qO- http://nginx/slow >/dev/null & done; sleep 90; wait'
+COUNT=60 DURATION=90 sh scripts/nginx_load_test.sh active
 ```
 
 기대 결과:
 
-* `/nginx_status`의 active connections 값이 50을 초과한다.
+* Zabbix Latest data 또는 Graph에서 `nginx active connections` 값이 50을 초과한다.
 * `nginx active connections is high` Trigger가 `PROBLEM` 상태로 전환된다.
 * Warning 알림 메일이 수신된다.
+
+High Trigger 검증을 위해 110개 동시 연결을 90초 동안 유지한다.
+
+```bash
+COUNT=110 DURATION=90 sh scripts/nginx_load_test.sh active
+```
+
+기대 결과:
+
+* Zabbix Latest data 또는 Graph에서 `nginx active connections` 값이 100을 초과한다.
+* `nginx active connections is critically high` Trigger가 `PROBLEM` 상태로 전환된다.
+* High 알림 메일이 수신된다.
 
 <details>
 <summary><strong>장애 발생 스크린샷 보기</strong></summary>
 
-
 <p><sub>active connections Trigger PROBLEM 전환</sub></p>
 
 <img src="images/screenshots/week2/scenario_4/active_connections_problem.png" alt="active_connections_problem" width="600">
-
 
 <p><sub>active connections 알림 메일 수신</sub></p>
 
@@ -843,12 +855,8 @@ docker exec zabbix-server sh -c 'for i in $(seq 1 60); do wget -qO- http://nginx
 
 복구:
 
-`/slow` location을 제거하거나 백업한 nginx 설정으로 되돌린 뒤 reload한다.
-
-```bash
-cp nginx/conf.d/default.conf.bak nginx/conf.d/default.conf
-docker exec nginx-sample nginx -s reload
-```
+테스트 스크립트는 `DURATION` 시간이 지나면 부하 요청을 종료한다.
+이후 active connections 값이 정상 범위로 감소하고 Trigger가 `RESOLVED` 상태로 전환되는지 확인한다.
 
 복구 후 기대 결과:
 
@@ -859,11 +867,9 @@ docker exec nginx-sample nginx -s reload
 <details>
 <summary><strong>복구 스크린샷 보기</strong></summary>
 
-
 <p><sub>active connections Trigger RESOLVED 전환</sub></p>
 
 <img src="images/screenshots/week2/scenario_4/active_connections_recovered.png" alt="active_connections_recovered" width="600">
-
 
 <p><sub>active connections 복구 알림 메일 수신</sub></p>
 
@@ -954,7 +960,7 @@ sh scripts/nginx_load_test.sh status
 COUNT=300 CONCURRENCY=20 TARGET_PATH=/status sh scripts/nginx_load_test.sh requests
 ```
 
-active connection 부하는 `nginx active connections is high` Trigger의 기준값과 수집 주기가 적절한지 확인하는 용도로 사용한다.
+active connection 부하는 `nginx active connections is high`와 `nginx active connections is critically high` Trigger의 기준값과 수집 주기가 적절한지 확인하는 용도로 사용한다.
 `COUNT`는 동시 요청 수, `DURATION`은 연결을 유지할 시간이다.
 
 ```bash
@@ -969,13 +975,15 @@ COUNT=60 DURATION=90 sh scripts/nginx_load_test.sh active
 | 요청량 증가 | `COUNT=300 CONCURRENCY=20 TARGET_PATH=/status sh scripts/nginx_load_test.sh requests` | total requests 증가, Web Scenario 응답시간 |
 | 동시접속 30개 | `COUNT=30 DURATION=90 sh scripts/nginx_load_test.sh active` | Trigger 미발생 여부 |
 | 동시접속 45개 | `COUNT=45 DURATION=90 sh scripts/nginx_load_test.sh active` | 경계 구간 안정성 |
-| 동시접속 60개 | `COUNT=60 DURATION=90 sh scripts/nginx_load_test.sh active` | `nginx active connections is high` 발생 여부 |
+| 동시접속 60개 | `COUNT=60 DURATION=90 sh scripts/nginx_load_test.sh active` | `nginx active connections is high` Warning 발생 여부 |
+| 동시접속 110개 | `COUNT=110 DURATION=90 sh scripts/nginx_load_test.sh active` | `nginx active connections is critically high` High 발생 여부 |
 
 효율적인 운영 기준은 다음과 같이 판단한다.
 
 * `30s` 수집 주기에서는 부하를 최소 `90s` 유지해야 누락 가능성이 낮다.
-* 장애를 빠르게 잡아야 하면 `last()>50` 방식이 빠르지만, 순간 피크에도 민감하게 반응한다.
-* 오탐을 줄이려면 Trigger 표현식을 `min(2m)>50`처럼 일정 시간 지속 조건으로 바꿔 비교한다.
+* 기존 `last()>50` 단일 기준은 빠르게 감지할 수 있지만 순간 피크에도 민감하게 반응한다.
+* 순간 급격 과부하는 `last()>100` 조건으로 High 알림을 발생시킨다.
+* 지속 과부하는 `min(1m)>50` 조건으로 Warning 알림을 발생시켜 일시적인 피크와 구분한다.
 * Web Scenario는 `1m` 주기와 `Attempts 1`이면 빠르게 감지하지만, 네트워크 흔들림에 민감하다.
 * 오탐을 줄이고 싶으면 Web Scenario `Attempts`를 `2`로 올리고, 장애 감지 시간이 약 1회 주기만큼 늦어지는지 확인한다.
 
