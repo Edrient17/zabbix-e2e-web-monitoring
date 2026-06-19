@@ -332,6 +332,8 @@ system.run[sh /var/lib/zabbix/user_scripts/nginx_active_connections.sh]
 system.run[sh /var/lib/zabbix/user_scripts/nginx_total_requests.sh]
 ```
 
+위 스크립트 원본은 리포지토리의 `scripts/agent2/` 디렉터리에 있으며, Docker Compose에서 `/var/lib/zabbix/user_scripts`로 읽기 전용 마운트된다.
+
 각 item의 의미는 다음과 같다.
 
 | item key | 수집 값 | 목적 |
@@ -934,6 +936,48 @@ docker exec zabbix-server sh -c 'wget -qO- http://nginx/status >/dev/null'
 <img src="images/screenshots/week2/scenario_5/request_counter_reset_recovered_mail.png" alt="request_counter_reset_recovered_mail" width="400">
 
 </details>
+
+### 8.6 nginx 부하 테스트 반복 실험
+
+nginx 관련 Item의 적정 수집 주기와 Trigger 반응성을 확인하려면 짧은 요청 증가 테스트와 active connection 유지 테스트를 분리해서 수행한다.
+현재 XML 기준 nginx 내부 지표 Item은 `30s` 주기로 수집되므로, active connection 부하는 최소 `90s` 이상 유지해야 Zabbix 수집 시점에 안정적으로 관측된다.
+
+현재 값을 먼저 확인한다.
+
+```bash
+sh scripts/nginx_load_test.sh status
+```
+
+짧은 요청 부하는 `nginx total requests` 증가 여부와 Web Scenario 응답시간 변화를 확인하는 용도로 사용한다.
+
+```bash
+COUNT=300 CONCURRENCY=20 TARGET_PATH=/status sh scripts/nginx_load_test.sh requests
+```
+
+active connection 부하는 `nginx active connections is high` Trigger의 기준값과 수집 주기가 적절한지 확인하는 용도로 사용한다.
+`COUNT`는 동시 요청 수, `DURATION`은 연결을 유지할 시간이다.
+
+```bash
+COUNT=60 DURATION=90 sh scripts/nginx_load_test.sh active
+```
+
+반복 실험은 다음 순서로 진행한다.
+
+| 실험 | 명령 예시 | 확인 항목 |
+| --- | --- | --- |
+| 기준값 확인 | `sh scripts/nginx_load_test.sh status` | active connections, total requests, process count |
+| 요청량 증가 | `COUNT=300 CONCURRENCY=20 TARGET_PATH=/status sh scripts/nginx_load_test.sh requests` | total requests 증가, Web Scenario 응답시간 |
+| 동시접속 30개 | `COUNT=30 DURATION=90 sh scripts/nginx_load_test.sh active` | Trigger 미발생 여부 |
+| 동시접속 45개 | `COUNT=45 DURATION=90 sh scripts/nginx_load_test.sh active` | 경계 구간 안정성 |
+| 동시접속 60개 | `COUNT=60 DURATION=90 sh scripts/nginx_load_test.sh active` | `nginx active connections is high` 발생 여부 |
+
+효율적인 운영 기준은 다음과 같이 판단한다.
+
+* `30s` 수집 주기에서는 부하를 최소 `90s` 유지해야 누락 가능성이 낮다.
+* 장애를 빠르게 잡아야 하면 `last()>50` 방식이 빠르지만, 순간 피크에도 민감하게 반응한다.
+* 오탐을 줄이려면 Trigger 표현식을 `min(2m)>50`처럼 일정 시간 지속 조건으로 바꿔 비교한다.
+* Web Scenario는 `1m` 주기와 `Attempts 1`이면 빠르게 감지하지만, 네트워크 흔들림에 민감하다.
+* 오탐을 줄이고 싶으면 Web Scenario `Attempts`를 `2`로 올리고, 장애 감지 시간이 약 1회 주기만큼 늦어지는지 확인한다.
 
 </details>
 

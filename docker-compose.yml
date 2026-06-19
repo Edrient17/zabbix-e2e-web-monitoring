@@ -106,7 +106,7 @@ services:
       ZBX_SERVER_PORT: 10051
       ZBX_ALLOWKEY: system.run[sh /var/lib/zabbix/user_scripts/nginx_process_count.sh],system.run[sh /var/lib/zabbix/user_scripts/nginx_active_connections.sh],system.run[sh /var/lib/zabbix/user_scripts/nginx_total_requests.sh]
     volumes:
-      - ./zabbix/agent2/scripts:/var/lib/zabbix/user_scripts:ro
+      - ./scripts/agent2:/var/lib/zabbix/user_scripts:ro
     depends_on:
       - zabbix-server
       - nginx
