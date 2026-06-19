@@ -91,13 +91,18 @@ run_active() {
         -e COUNT="$COUNT" \
         -e DURATION="$DURATION" \
         zabbix-server sh -c '
+            pids=""
             i=1
             while [ "$i" -le "$COUNT" ]; do
                 wget -qO- --header "Authorization: Basic $AUTH_HEADER" http://nginx/load-slow >/dev/null &
+                pids="$pids $!"
                 i=$((i + 1))
             done
             sleep "$DURATION"
-            wait
+            for pid in $pids; do
+                kill "$pid" 2>/dev/null || true
+            done
+            wait 2>/dev/null || true
         '
 
     echo "After:"
