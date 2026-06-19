@@ -125,7 +125,21 @@ POSTGRES_DB=zabbix_DB
 ZBX_SERVER_NAME=Zabbix E2E Monitoring
 ZBX_SERVER_HOST=zabbix-server
 PHP_TZ=Asia/Seoul
+NGINX_BASIC_AUTH_HEADER=<BASE64_USER_PASSWORD>
 ```
+
+nginx 샘플 앱은 HTTP Basic Auth를 사용하므로 실제 인증 파일은 로컬에서 생성한다.
+다음 예시는 `zabbix-monitor` 사용자를 생성하는 방법이다.
+
+```bash
+sudo apt-get update
+sudo apt-get install -y apache2-utils
+htpasswd -nbB zabbix-monitor '<NGINX_BASIC_PASSWORD>' > nginx/.htpasswd
+printf 'zabbix-monitor:<NGINX_BASIC_PASSWORD>' | base64 -w 0
+```
+
+위 명령의 base64 출력값을 `.env`의 `NGINX_BASIC_AUTH_HEADER`에 입력한다.
+`nginx/.htpasswd`는 인증 정보 파일이므로 Git에 커밋하지 않는다.
 
 ### 5.3 서비스 기동
 
@@ -260,9 +274,11 @@ python3 zabbix/api/create_dashboard.py
 ```
 
 Zabbix 관리자 비밀번호를 변경한 경우에는 환경 변수로 API 접속 정보를 지정한다.
+Dashboard 생성 스크립트를 Zabbix가 실행 중인 VM 내부에서 실행한다면 API URL은 `127.0.0.1`을 사용한다.
+외부 PC에서 실행할 때만 `<VM_PUBLIC_IP>`를 사용한다.
 
 ```bash
-export ZABBIX_URL="http://<VM_PUBLIC_IP>:8080/api_jsonrpc.php"
+export ZABBIX_URL="http://127.0.0.1:8080/api_jsonrpc.php"
 export ZABBIX_USER="Admin"
 export ZABBIX_PASSWORD="<ZABBIX_ADMIN_PASSWORD>"
 python3 zabbix/api/create_dashboard.py

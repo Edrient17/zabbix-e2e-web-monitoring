@@ -121,10 +121,12 @@ services:
       - "80"
     volumes:
       - ./nginx/conf.d/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx/.htpasswd:/etc/nginx/.htpasswd:ro
+      - ./nginx/html:/usr/share/nginx/html:ro
     networks:
       - zabbix-net
     healthcheck:
-      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1/health || exit 1"]
+      test: ["CMD-SHELL", "wget -q --spider --header \"Authorization: Basic ${NGINX_BASIC_AUTH_HEADER}\" http://127.0.0.1/health || exit 1"]
       interval: 30s
       timeout: 5s
       retries: 3
