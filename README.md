@@ -10,106 +10,87 @@ Zabbix Web Scenario와 Browser Item을 활용하여 웹서비스의 가용성과
 
 ![Architecture Diagram](images/architecture_diagram.jpg)
 
-각 보라색 사각형은 Docker Compose로 구성한 컨테이너이다.
-
-Zabbix Web UI는 관리자가 8080 포트로 접근하는 관리자 화면이다.
-Web Scenario의 실제 HTTP 요청은 Zabbix Web UI가 아니라 `zabbix-server` 컨테이너가 수행한다.
-
-nginx 샘플 앱은 Docker 내부 네트워크에서 다음 주소로 접근한다.
-
-```text
-http://nginx/
-http://nginx/health
-http://nginx/status
-http://nginx/nginx_status
-```
-
-
-
-</details>
-
-<details>
-<summary><strong>2. 시스템 구성</strong></summary>
-
-## 2. 시스템 구성
-
 Docker Compose로 구성한 서비스는 다음과 같다.
 
-| 서비스           | 컨테이너명             | 역할                               |
-| ------------- | ----------------- | -------------------------------- |
-| postgresql    | zabbix-postgresql | Zabbix 데이터 저장용 PostgreSQL 데이터베이스 |
-| zabbix-server | zabbix-server     | Zabbix 모니터링 서버                   |
-| zabbix-web    | zabbix-web        | Zabbix Web Frontend              |
-| zabbix-agent2 | zabbix-agent2     | Zabbix Server에 호스트 상태 메트릭을 제공하는 모니터링 에이전트 |
-| nginx-agent2  | nginx-agent2      | nginx 프로세스 및 내부 상태를 `system.run[]`으로 수집하는 전용 에이전트 |
-| nginx         | nginx-sample      | Web Scenario 테스트용 샘플 웹서비스        |
+| 서비스 | 컨테이너명 | 역할 |
+| --- | --- | --- |
+| postgresql | zabbix-postgresql | Zabbix 데이터 저장용 PostgreSQL 데이터베이스 |
+| zabbix-server | zabbix-server | Zabbix 모니터링 서버 |
+| zabbix-web | zabbix-web | Zabbix Web Frontend |
+| zabbix-agent2 | zabbix-agent2 | Zabbix Server에 호스트 상태 메트릭을 제공하는 모니터링 에이전트 |
+| nginx-agent2 | nginx-agent2 | nginx 프로세스 및 내부 상태를 `system.run[]`으로 수집하는 전용 에이전트 |
+| nginx | nginx-sample | Web Scenario 테스트용 샘플 웹서비스 |
+| selenium-chrome | selenium-chrome | Browser Item 실행을 위한 Selenium WebDriver/Chrome 컨테이너 |
 
 
 
 </details>
 
-<details>
-<summary><strong>3. 사전 요구사항</strong></summary>
 
-## 3. 사전 요구사항
+<details>
+<summary><strong>2. 사전 요구사항</strong></summary>
+
+## 2. 사전 요구사항
 
 VM 환경에는 다음 소프트웨어가 필요하다.
 
 * Ubuntu 24.04 LTS
 * Docker Engine 26.x 이상
 * Docker Compose v2.x 이상
-* Zabbix Server	7.x LTS, Zabbix Web (Frontend) (동일 버전)
-* PostgreSQL 15.x 이상
-* nginx 1.24 이상
 * Git 2.x 이상
-* curl / wget 기본 포함
+* Python 3.x (Dashboard 생성 스크립트 실행용)
+* curl 또는 wget (접속 확인 및 문제 진단용)
+
+Zabbix, PostgreSQL, nginx, Selenium의 컨테이너 이미지 버전은 다음과 같다.
+
+| 구성요소 | 이미지 버전 |
+| --- | --- |
+| Zabbix Server / Web / Agent 2 | `7.0.27` |
+| PostgreSQL | `16.14-alpine` |
+| nginx | `1.27.5-alpine` |
+| Selenium Chrome | `4.21.0` |
 
 
 
 </details>
 
 <details>
-<summary><strong>4. 네트워크 및 포트 정책</strong></summary>
+<summary><strong>3. 네트워크 및 포트 정책</strong></summary>
 
-## 4. 네트워크 및 포트 정책
+## 3. 네트워크 및 포트 정책
 
-본 프로젝트는 Docker Compose에 서비스별 포트 사용 목적을 명시하고, 실제 외부 접근 제어는 Cloud VM의 Security Group에서 수행한다.
-Security Group 인바운드 규칙은 허용 목록 방식으로 관리하며, 명시적으로 허용하지 않은 포트와 출발지는 암시적으로 거부된다.
-아웃바운드 규칙은 개발/평가 환경의 Browser Item 실행, 외부 Midibus Web 접속, SMTP 메일 발송, 패키지/이미지 다운로드 등 외부 의존성이 많아 전체 송신을 허용한다.
-운영 환경에서는 외부 서비스 접속 대상이 확정된 뒤 HTTPS, SMTP, IMDS 등 필요한 목적지와 포트만 허용하도록 축소하는 것을 권장한다.
+### 3.1 Security Group 정책:
 
-| 컴포넌트             |        포트 | 용도                  | 노출 범위         | Security Group 정책       |
-| ---------------- | --------: | ------------------- | ------------- | ----------------------- |
-| Zabbix Web UI    |  8080/tcp | 관리자 Web UI 접속       | 외부 노출 필요      | 허용된 IP 또는 업무망에서만 허용    |
-| Zabbix Server    | 10051/tcp | Zabbix 내부 서비스 포트    | Docker 내부 전용   | 외부 인바운드 허용 규칙 없음      |
-| Zabbix Agent2    | 10050/tcp | Agent 통신 포트         | Docker 내부 전용   | 외부 인바운드 허용 규칙 없음      |
-| nginx Agent2     | 10050/tcp | nginx 전용 Agent 통신 포트 | Docker 내부 전용   | 외부 인바운드 허용 규칙 없음      |
-| nginx Sample App |    80/tcp | Web Scenario 테스트 대상 | Docker 내부 전용   | 외부 인바운드 허용 규칙 없음      |
-| PostgreSQL       |  5432/tcp | Zabbix 데이터베이스       | Docker 내부 전용 | 외부 인바운드 허용 규칙 없음      |
-
-Security Group 송신 정책:
-
-| 방향 | 대상 | 정책 |
+| 방향 | 대상 | 설명 |
 | --- | --- | --- |
 | Inbound | `22/tcp`, `8080/tcp` | 관리자 IP 또는 업무망에서만 허용 |
-| Outbound | All traffic | 개발/평가 환경에서는 외부 Browser Item, SMTP, Docker/Git/패키지 다운로드를 위해 허용 |
-| Outbound 운영 권장 | HTTPS, SMTP, IMDS 등 | 실제 운영에서는 필요한 목적지와 포트로 제한 |
+| Outbound | All traffic | 외부 Browser Item, SMTP, Docker/Git/패키지 다운로드 |
 
-Docker Compose에서 호스트에 publish되는 포트는 Zabbix Web UI의 `8080/tcp`뿐이다.
-Zabbix Web Scenario에서는 외부 IP가 아니라 Docker 내부 서비스명인 `nginx`를 사용한다.
-Zabbix Server는 Docker 내부 네트워크를 통해 `zabbix-agent2:10050`으로 Agent2에 접근한다.
-nginx 전용 `nginx-agent2`는 `nginx-sample` 컨테이너의 PID namespace를 공유하여 nginx 프로세스 상태를 확인한다.
+Inbound의 경우, 명시적으로 허용하지 않은 포트와 출발지는 암시적으로 거부된다. <br>
+Outbound의 경우, 개발/테스트 환경에서는 편의성을 위해 전체 허용해도 되지만 실제 운영 환경에서는 외부 서비스 접속 대상이 확정된 뒤 HTTPS, SMTP, IMDS 등 필요한 목적지와 포트만 허용하도록 축소해야 한다.
 
+### 3.2 Docker Compose 내 Service 별 정책
 
+| Service          | 포트      | 용도                  | 노출 범위         | Security Group 정책       |
+| ---------------- | --------- | ------------------- | ------------- | ----------------------- |
+| Zabbix Web UI    |  8080/tcp | 관리자 Web UI 접속       | 외부 노출 필요      | 허용된 IP or 업무망에서만 허용    |
+| Zabbix Server    | 10051/tcp | Zabbix 내부 서비스 포트    | Docker 내부 전용   | 외부 인바운드 허용 X      |
+| Zabbix Agent2    | 10050/tcp | Agent 통신 포트         | Docker 내부 전용   | 외부 인바운드 허용 X      |
+| nginx Agent2     | 10050/tcp | nginx 전용 Agent 통신 포트 | Docker 내부 전용   | 외부 인바운드 허용 X      |
+| nginx Sample App |    80/tcp | Web Scenario 테스트 대상 | Docker 내부 전용   | 외부 인바운드 허용 X      |
+| PostgreSQL       |  5432/tcp | Zabbix 데이터베이스       | Docker 내부 전용 | 외부 인바운드 허용 X     |
+
+Docker Compose에서 호스트에 publish되는 포트는 Zabbix Web UI의 `8080/tcp`뿐이다.<br>
+이 외의 서비스는 Docker 네트워크 내부에서만 통신하므로 외부에서 직접 접근할 필요가 없다.
 
 </details>
 
 <details>
-<summary><strong>5. 설치 및 기동 방법</strong></summary>
+<summary><strong>4. 설치 및 기동 방법</strong></summary>
 
-## 5. 설치 및 기동 방법
+## 4. 설치 및 기동 방법
 
-### 5.1 프로젝트 다운로드
+### 4.1 프로젝트 다운로드
 
 GitHub 리포지토리를 VM에 내려받고 프로젝트 디렉터리로 이동한다.
 
@@ -118,7 +99,7 @@ git clone <REPOSITORY_URL>
 cd zabbix-e2e-web-monitoring
 ```
 
-### 5.2 환경 변수 설정
+### 4.2 환경 변수 설정
 
 예시 환경 변수 파일을 복사하여 실제 Docker Compose 실행에 사용할 `.env` 파일을 생성한다.
 
@@ -126,7 +107,7 @@ cd zabbix-e2e-web-monitoring
 cp .env.example .env
 ```
 
-`.env` 파일에서 PostgreSQL 비밀번호와 Zabbix 서버명을 환경에 맞게 수정한다.
+이후 `.env` 파일에서 *POSTGRES_PASSWORD*와 *ZBX_SERVER_NAME*을 환경에 맞게 수정한다.
 
 ```env
 POSTGRES_USER=zabbix
@@ -138,8 +119,9 @@ PHP_TZ=Asia/Seoul
 NGINX_BASIC_AUTH_HEADER=<BASE64_USER_PASSWORD>
 ```
 
-nginx 샘플 앱은 HTTP Basic Auth를 사용하므로 실제 인증 파일은 로컬에서 생성한다.
-다음 예시는 `zabbix-monitor` 사용자를 생성하는 방법이다.
+nginx 샘플 앱은 *HTTP Basic Auth*를 사용하며, 실제 인증 파일은 로컬에서 생성한다.<br>
+다음 예시와 같이 `zabbix-monitor` 사용자를 생성한 후 비밀번호를 base64로 인코딩한 값을 `.env`의 `NGINX_BASIC_AUTH_HEADER`에 입력한다.<br>
+이때, `nginx/.htpasswd`는 인증 정보 파일이므로 Git에 커밋하지 않는다.
 
 ```bash
 sudo apt-get update
@@ -148,10 +130,7 @@ htpasswd -nbB zabbix-monitor '<NGINX_BASIC_PASSWORD>' > nginx/.htpasswd
 printf 'zabbix-monitor:<NGINX_BASIC_PASSWORD>' | base64 -w 0
 ```
 
-위 명령의 base64 출력값을 `.env`의 `NGINX_BASIC_AUTH_HEADER`에 입력한다.
-`nginx/.htpasswd`는 인증 정보 파일이므로 Git에 커밋하지 않는다.
-
-### 5.3 서비스 기동
+### 4.3 서비스 기동
 
 프로젝트 루트 디렉터리에서 다음 명령어를 실행한다.
 
@@ -162,7 +141,7 @@ docker compose up -d
 
 <img src="images/screenshots/week1/screenshot_1_docker_compose_up.png" alt="docker_compose_up_screenshot">
 
-### 5.4 컨테이너 상태 확인
+### 4.4 컨테이너 상태 확인
 
 컨테이너 상태를 확인한다.
 
@@ -173,20 +152,9 @@ docker compose ps
 
 <img src="images/screenshots/week1/screenshot_2_docker_compose_ps.png" alt="docker_compose_ps_screenshot">
 
-정상 기동 시 다음 컨테이너가 실행된다.
+### 4.5 Zabbix Server에서 nginx 접근 확인
 
-```text
-nginx-sample
-nginx-agent2
-zabbix-agent2
-zabbix-postgresql
-zabbix-server
-zabbix-web
-```
-
-### 5.5 Zabbix Server에서 nginx 접근 확인
-
-Web Scenario는 Zabbix Web UI가 아니라 `zabbix-server` 컨테이너에서 실행되므로, `zabbix-server` 컨테이너가 Docker 내부 네트워크로 nginx에 접근 가능한지 확인한다.
+`zabbix-server` 컨테이너가 Docker 내부 네트워크로 nginx에 접근 가능한지 확인한다.<br>
 Basic Auth가 적용되어 있으므로 `<BASE64_USER_PASSWORD>`는 `.env`의 `NGINX_BASIC_AUTH_HEADER` 값으로 치환한다.
 
 ```bash
@@ -195,9 +163,9 @@ docker exec zabbix-server sh -c "wget --header 'Authorization: Basic <BASE64_USE
 docker exec zabbix-server sh -c "wget --header 'Authorization: Basic <BASE64_USER_PASSWORD>' -qO- http://nginx/status"
 ```
 
-### 5.6 최초 기동 후 Zabbix UI 초기 구성
+### 4.6 최초 기동 후 Zabbix UI 초기 구성
 
-새 PC 또는 새 VM에서 처음 기동한 경우 Docker 컨테이너만 실행하면 Zabbix DB에는 프로젝트 설정이 아직 들어 있지 않다.
+새 PC 또는 새 VM에서 처음 Docker 컨테이너 실행 시, Zabbix DB에는 프로젝트 설정이 들어 있지 않다. <br>
 따라서 Zabbix Web UI에 접속한 뒤 Host export XML import, Media type, 사용자 Media, Host macro, Trigger Action을 추가로 설정한다.
 
 Zabbix Web UI 접속 정보는 다음과 같다.
@@ -208,7 +176,7 @@ Username: Admin
 Password: zabbix
 ```
 
-초기 구성 순서는 다음과 같이 진행한다.
+초기 구성 순서는 다음과 같이 진행한다. 상세 정보는 6. Zabbix Web UI 접속 및 초기 설정 섹션에 설명되어 있다.
 
 | 순서 | 작업 | 위치 | 참고 |
 | --- | --- | --- | --- |
@@ -222,7 +190,9 @@ Password: zabbix
 | 8 | Dashboard 생성 | Zabbix API | `zabbix/api/create_dashboard.py` 실행 |
 | 9 | 수집 및 알림 동작 확인 | `Monitoring` / `Reports` | Latest data, Problems, Action log, 메일 수신 확인 |
 
-Import 대상 XML 파일은 다음과 같다.
+<br>
+
+** Import 대상 XML 파일은 다음과 같다.
 
 | XML 파일 | 포함 내용 |
 | --- | --- |
@@ -230,24 +200,28 @@ Import 대상 XML 파일은 다음과 같다.
 | `zabbix/export/zbx_export_hosts_nginx-sample.xml` | `nginx-sample` Host, nginx 내부 지표 Item, nginx 내부 지표 Trigger |
 | `zabbix/export/zbx_export_hosts_midibus-web.xml` | `midibus-web` Host, Browser Item, Dependent Item, Browser Item Trigger |
 
-`midibus-web` Host에서 실제 환경에 맞게 다시 설정해야 하는 주요 macro는 다음과 같다.
+<br>
 
-```text
-{$MIDIBUS_URL}
-{$MIDIBUS_USER}
-{$MIDIBUS_PASSWORD}
-{$MIDIBUS_TEST_PREFIX}
-{$MIDIBUS_TEST_VIDEO_PATH}
-{$MIDIBUS_ALLOWED_IP}
-```
+** `midibus-web` Host에서 실제 환경에 맞게 다시 설정해야 하는 주요 macro는 다음과 같다.
 
-`{$MIDIBUS_TEST_VIDEO_PATH}`는 Selenium 컨테이너 내부 경로를 사용한다.
+| Macro | 용도 |
+| --- | --- |
+| `{$MIDIBUS_URL}` | Midibus 로그인 URL |
+| `{$MIDIBUS_USER}` | 로그인 사용자 ID |
+| `{$MIDIBUS_PASSWORD}` | 로그인 비밀번호 |
+| `{$MIDIBUS_TEST_PREFIX}` | 테스트 데이터 접두어 |
+| `{$MIDIBUS_TEST_VIDEO_PATH}` | Selenium 컨테이너 내부 테스트 영상 경로 |
+| `{$MIDIBUS_ALLOWED_IP}` | 보안 재생키 허용 IP |
+
+이때, `{$MIDIBUS_TEST_VIDEO_PATH}`는 Selenium 컨테이너 내부 경로를 사용한다.
 
 ```text
 /opt/zabbix/browser-files/zbx-bi-test-video.mp4
 ```
 
-Trigger Action은 Host export XML에 포함되지 않으므로 새 환경에서는 직접 등록해야 한다.
+<br>
+
+** Trigger Action은 Host export XML에 포함되지 않으므로 새 환경에서는 직접 등록해야 한다.<br>
 본 프로젝트에서 사용한 Action은 다음 4개이다.
 
 ```text
@@ -257,16 +231,17 @@ Notify nginx internal trigger problems
 Notify nginx web scenario problem
 ```
 
-각 Action의 조건, Operation, Recovery operation 설정값은 7.6 알람 발송 설정과 9.6 Browser Item Email 알림을 기준으로 등록한다.
+<br>
 
-Dashboard는 Zabbix API로 생성한다.
-기본 접속 정보(`Admin` / `zabbix`)를 그대로 사용하는 경우 다음 명령어로 생성할 수 있다.
+** 각 Action의 조건, Operation, Recovery operation 설정값은 6.6 알람 발송 설정과 9.6 Browser Item Email 알림을 기준으로 등록한다.
+
+** Dashboard는 Zabbix API로 생성한다. 기본 접속 정보(`Admin` / `zabbix`)를 그대로 사용하는 경우 다음 명령어로 생성할 수 있다.
 
 ```bash
 python3 zabbix/api/create_dashboard.py
 ```
 
-Zabbix 관리자 비밀번호를 변경한 경우에는 환경 변수로 API 접속 정보를 지정한다.
+만약 Zabbix 관리자 비밀번호를 변경했다면, 아래와 같이 환경 변수로 API 접속 정보를 지정한다.
 Dashboard 생성 스크립트를 Zabbix가 실행 중인 VM 내부에서 실행한다면 API URL은 `127.0.0.1`을 사용한다.
 외부 PC에서 실행할 때만 `<VM_PUBLIC_IP>`를 사용한다.
 
@@ -277,23 +252,22 @@ ZABBIX_PASSWORD="<ZABBIX_ADMIN_PASSWORD>" \
 python3 zabbix/api/create_dashboard.py
 ```
 
-Zabbix API 접속 정보는 민감 정보이므로 `export`로 세션에 계속 남기지 않고 위처럼 일회성 환경 변수로 실행한다.
+이때, Zabbix API 접속 정보는 민감 정보이므로 `export`로 세션에 계속 남기지 않고 위처럼 일회성 환경 변수로 실행한다.
 이미 `export`로 설정했다면 Dashboard 적용 후 다음 명령어로 현재 셸에서 삭제한다.
 
 ```bash
 unset ZABBIX_URL ZABBIX_USER ZABBIX_PASSWORD
 ```
 
-동일한 이름의 Dashboard가 이미 있으면 중복 생성하지 않는다.
-기존 Dashboard를 삭제하고 다시 생성해야 하는 경우에는 `--replace` 옵션을 사용한다.
+** 만약 동일한 이름의 Dashboard가 이미 있으면 중복 생성되지 않는다. 이 경우에는 기존 Dashboard를 삭제하고 다시 생성하기 위해 `--replace` 옵션을 사용한다.
 
 ```bash
 python3 zabbix/api/create_dashboard.py --replace
 ```
 
-초기 구성 후에는 Dashboard, Web Scenario 최신 데이터, Browser Item 최신 데이터, `Reports` > `Action log`의 발송 결과를 확인한다.
+** 초기 구성 후에는 Dashboard, Web Scenario 최신 데이터, Browser Item 최신 데이터, `Reports` > `Action log`의 발송 결과를 확인한다.
 
-### 5.7 서비스 중지
+### 4.7 서비스 중지
 
 전체 서비스를 중지하려면 다음 명령어를 실행한다.
 
@@ -313,25 +287,29 @@ docker compose down -v
 </details>
 
 <details>
-<summary><strong>6. nginx 샘플 앱</strong></summary>
+<summary><strong>5. nginx Sample App</strong></summary>
 
-## 6. nginx 샘플 앱
+## 5. nginx Sample App
 
-### 6.1 Web Scenario 대상 엔드포인트
+### 5.1 nginx Endpoint
 
-nginx 샘플 웹서비스는 Web Scenario 테스트 대상으로 사용된다.
+nginx 샘플 웹서비스는 Web Scenario 가용성 점검과 nginx 내부 지표 및 부하 테스트를 위한 Endpoint를 제공한다.
 
-| 경로        | 기대 응답                        | 검증 목적                     |
-| --------- | ---------------------------- | ------------------------- |
-| `/`       | HTTP 200, `Welcome to nginx` | 메인 페이지 응답 확인 |
-| `/health` | HTTP 200, `OK`               | 상태 확인 엔드포인트 검증            |
-| `/status` | HTTP 200, `status check`     | 상태 페이지 응답 및 응답시간 검증       |
-| `/nginx_status` | nginx stub_status 응답 | Agent2 `system.run[]` 내부 지표 수집 |
+| 경로 | 기대 응답 | 용도 |
+| --- | --- | --- |
+| `/` | HTTP 200, `Welcome to nginx` | Web Scenario Endpoint |
+| `/health` | HTTP 200, `OK` | Web Scenario Endpoint |
+| `/status` | HTTP 200, `status check` | Web Scenario Endpoint |
+| `/load-slow` | HTTP 200, 저속 응답 | active connection 부하 테스트 시 연결을 일정 시간 유지 |
+| `/nginx_status` | nginx `stub_status` | Agent 2를 통한 nginx 프로세스 및 내부 상태 지표 수집 |
 
-### 6.2 zabbix-agent2 system.run 기반 nginx 내부 상태 수집
+- `/load-slow`는 `scripts/nginx_load_test.sh active` 명령에서만 사용하는 부하 테스트용 Endpoint이며, 정기 Web Scenario Step에는 포함하지 않는다.
 
-기존 Web Scenario는 URL 기준의 사용자 관점 가용성 검증에 사용한다.
-추가로 `nginx-agent2`는 `system.run[]` item을 통해 스크립트를 실행하고 nginx 프로세스 및 내부 지표를 수집한다.
+- `/nginx_status`는 Docker 내부 네트워크와 localhost에서만 접근하도록 제한되어 있으며 외부 공개 대상이 아니다.
+
+### 5.2 zabbix-agent2 system.run 기반 nginx 내부 상태 수집
+
+`nginx-agent2`는 `system.run[]` item을 통해 스크립트를 실행하고 nginx 프로세스 및 내부 지표를 수집한다.
 
 Zabbix UI에서 `nginx-sample` 호스트를 별도로 만들고 Agent Interface를 DNS `nginx-agent2`, Port `10050`으로 설정한다.
 이후 다음 item key를 Zabbix agent 타입으로 등록한다.
@@ -342,7 +320,13 @@ system.run[sh /var/lib/zabbix/user_scripts/nginx_active_connections.sh]
 system.run[sh /var/lib/zabbix/user_scripts/nginx_total_requests.sh]
 ```
 
-위 스크립트 원본은 리포지토리의 `scripts/agent2/` 디렉터리에 있으며, Docker Compose에서 `/var/lib/zabbix/user_scripts`로 읽기 전용 마운트된다.
+예시 스크린샷
+
+<img src="images/screenshots/week2/nginx_internal_items.png" alt="nginx_internal_items" width="700">
+
+
+<br>
+참고: 스크립트의 원본들은 리포지토리의 `scripts/agent2/` 디렉터리에 있으며, Docker Compose에서 `/var/lib/zabbix/user_scripts`로 읽기 전용 마운트된다.
 
 각 item의 의미는 다음과 같다.
 
@@ -352,8 +336,6 @@ system.run[sh /var/lib/zabbix/user_scripts/nginx_total_requests.sh]
 | `nginx_active_connections.sh` | 현재 active connection 수 | nginx 내부 연결 상태 확인 |
 | `nginx_total_requests.sh` | 누적 request 수 | 요청 처리량 추세 확인 |
 
-이 구성에서는 `system.run[]` 전체를 허용하지 않고, `docker-compose.yml`의 `ZBX_ALLOWKEY`로 필요한 스크립트 실행만 허용한다.
-
 ***보안상 주의할 점***은 다음과 같다.
 
 * `system.run[]`은 Agent가 OS 명령을 실행하는 기능이므로 전체 허용하지 않고 필요한 명령만 `AllowKey`로 제한한다.
@@ -361,31 +343,14 @@ system.run[sh /var/lib/zabbix/user_scripts/nginx_total_requests.sh]
 * `/nginx_status`는 내부 지표 엔드포인트이므로 외부에 공개하지 않고 Docker 내부 네트워크에서만 접근하도록 `allow`/`deny`를 설정한다.
 * `nginx-agent2`는 `nginx-sample`의 PID namespace만 공유하여 프로세스 확인 범위를 nginx 컨테이너로 제한한다.
 
-
-
 </details>
 
 <details>
-<summary><strong>7. Zabbix Web UI 접속 및 초기 설정</strong></summary>
+<summary><strong>6. Zabbix Web UI 접속 및 초기 설정</strong></summary>
 
-## 7. Zabbix Web UI 접속 및 초기 설정
+## 6. Zabbix Web UI 접속 및 초기 설정
 
-Zabbix Web Frontend는 VM의 8080 포트로 접근한다.
-
-```text
-http://<VM_PUBLIC_IP>:8080
-```
-
-초기 로그인 정보는 다음과 같다.
-
-```text
-Username: Admin
-Password: zabbix
-```
-
-최초 로그인 후 관리자 비밀번호를 변경하였다.
-
-### 7.1 Zabbix Server Host 기본 설정
+### 6.1 Zabbix Server Host 기본 설정
 
 기본으로 생성되어 있는 `Zabbix server` Host는 Zabbix 서버 컨테이너와 Agent2 상태를 확인하는 기준 Host로 사용한다.
 
@@ -397,7 +362,7 @@ Password: zabbix
 | Port | `10050` |
 | Connect to | DNS |
 
-### 7.2 nginx-sample Host 등록
+### 6.2 nginx-sample Host 등록
 
 nginx 내부 지표를 수집하기 위해 `nginx-sample` Host를 별도로 등록한다.
 
@@ -414,17 +379,17 @@ nginx 내부 지표를 수집하기 위해 `nginx-sample` Host를 별도로 등�
 
 이 Host는 `nginx-agent2` 컨테이너를 통해 nginx 프로세스 및 `/nginx_status` 내부 지표를 수집한다.
 
-### 7.3 nginx 내부 지표 Item 등록
+### 6.3 nginx 내부 지표 Item 등록
 
 `nginx-sample` Host의 `Items`에서 다음 Zabbix agent 타입 Item을 생성한다.
 
 | Item name | Key | Type of information | Update interval |
 | --- | --- | --- | --- |
-| nginx process count | `system.run[sh /var/lib/zabbix/user_scripts/nginx_process_count.sh]` | Numeric unsigned | `1m` |
-| nginx active connections | `system.run[sh /var/lib/zabbix/user_scripts/nginx_active_connections.sh]` | Numeric unsigned | `1m` |
-| nginx total requests | `system.run[sh /var/lib/zabbix/user_scripts/nginx_total_requests.sh]` | Numeric unsigned | `1m` |
+| nginx process count | `system.run[sh /var/lib/zabbix/user_scripts/nginx_process_count.sh]` | Numeric unsigned | `30s` |
+| nginx active connections | `system.run[sh /var/lib/zabbix/user_scripts/nginx_active_connections.sh]` | Numeric unsigned | `30s` |
+| nginx total requests | `system.run[sh /var/lib/zabbix/user_scripts/nginx_total_requests.sh]` | Numeric unsigned | `30s` |
 
-### 7.4 Web Scenario 등록
+### 6.4 Web Scenario 등록
 
 nginx Web Scenario는 `Zabbix server` Host 아래에 등록한다.
 
@@ -450,7 +415,7 @@ Scenario Step은 다음과 같이 구성한다.
 
 Web Scenario는 Zabbix Web UI가 아니라 `zabbix-server` 컨테이너에서 실행되므로, URL은 외부 IP가 아닌 Docker 내부 서비스명 `nginx`를 사용한다.
 
-### 7.5 Trigger 등록
+### 6.5 Trigger 등록
 
 Web Scenario 기반 Trigger는 `Zabbix server` Host에 등록한다.
 
@@ -468,11 +433,11 @@ nginx 내부 지표 기반 Trigger는 `nginx-sample` Host에 등록한다.
 | `nginx active connections is high` | Warning | `min(/nginx-sample/system.run[sh /var/lib/zabbix/user_scripts/nginx_active_connections.sh],1m)>50` | 1분 이상 지속되는 active connection 과다 감지 |
 | `nginx request counter reset detected` | Information | `change(/nginx-sample/system.run[sh /var/lib/zabbix/user_scripts/nginx_total_requests.sh])<0` | nginx 재시작 또는 request counter 초기화 감지 |
 
-### 7.6 알람 발송 설정
+### 6.6 알람 발송 설정
 
 알람은 Email Media type, 사용자 Media, Trigger Action 순서로 설정한다.
 
-#### 7.6.1 Email Media type 설정
+#### 6.6.1 Email Media type 설정
 
 `Alerts` > `Media types` > `Email`에서 SMTP 정보를 설정한다.
 
@@ -487,7 +452,7 @@ nginx 내부 지표 기반 Trigger는 `nginx-sample` Host에 등록한다.
 
 설정 후 `Test` 버튼으로 메일 발송이 성공하는지 확인한다.
 
-#### 7.6.2 사용자 Media 등록
+#### 6.6.2 사용자 Media 등록
 
 `Users` > `Users` > `Admin` > `Media`에서 수신자를 등록한다.
 
@@ -499,7 +464,7 @@ nginx 내부 지표 기반 Trigger는 `nginx-sample` Host에 등록한다.
 | Use if severity | 전부 체크 |
 | Enabled | 체크 |
 
-#### 7.6.3 Trigger Action 등록
+#### 6.6.3 Trigger Action 등록
 
 `Alerts` > `Actions` > `Trigger actions`에서 Web Scenario용 Action과 nginx 내부 지표용 Action을 분리하여 등록한다.
 
@@ -569,15 +534,15 @@ Send only to: Email
 </details>
 
 <details>
-<summary><strong>8. Web Scenario 및 nginx 장애 테스트 방법</strong></summary>
+<summary><strong>7. Web Scenario 장애 테스트 방법</strong></summary>
 
-## 8. Web Scenario 및 nginx 장애 테스트 방법
+## 7. Web Scenario 장애 테스트 방법
 
-Web Scenario 및 nginx 내부 지표 장애 테스트는 Trigger가 `PROBLEM`으로 전환되는지, 복구 후 `RESOLVED`로 전환되는지, 그리고 Email Action이 정상 발송되는지 확인하는 절차이다.
+Web Scenario 장애 테스트는 Trigger가 `PROBLEM`으로 전환되는지, 복구 후 `RESOLVED`로 전환되는지, 그리고 Email Action이 정상 발송되는지 확인하는 절차이다.
 
 장애 발생 후에는 `Monitoring` > `Problems`에서 Problem 상태를 확인하고, `Reports` > `Action log`에서 메일 발송 결과가 `Sent`로 기록되는지 확인한다.
 
-### 8.1 Web Scenario 실패 테스트
+### 7.1 Web Scenario 실패 테스트
 
 nginx 컨테이너를 중지하여 Web Scenario의 모든 Step이 nginx에 접근하지 못하도록 만든다.
 
@@ -643,7 +608,10 @@ docker start nginx-sample
 
 </details>
 
-### 8.2 `/status` 응답시간 초과 테스트
+### 7.2 `/status` 응답시간 초과 테스트
+
+이 테스트는 HTTP 200 응답은 정상적으로 받되 응답시간만 3초를 초과하는지 확인하는 테스트이다. Web Scenario의 `status` Step Timeout은 `10s` 또는 `15s` 정도로 설정하고, nginx의 지연도 Timeout을 넘지 않도록 조정한다.
+
 
 `/status` 응답이 3초를 초과하도록 nginx 설정을 임시로 변경한다. 테스트 전 원본 설정을 백업한다.
 
@@ -651,9 +619,7 @@ docker start nginx-sample
 cp nginx/conf.d/default.conf nginx/conf.d/default.conf.bak
 ```
 
-이 테스트는 `/status` Step이 실패하는 것이 아니라, HTTP 200 응답은 정상적으로 받되 응답시간만 3초를 초과하는지 확인하는 테스트이다. Web Scenario의 `status` Step Timeout은 `10s` 또는 `15s` 정도로 설정하고, nginx의 지연도 Timeout을 넘지 않도록 조정한다.
-
-`nginx/conf.d/default.conf`의 `/status` location을 테스트용으로 변경한다.
+`nginx/conf.d/default.conf`의 `/status` location을 다음과 같이 테스트용으로 변경한다.
 
 ```nginx
 location /status {
@@ -719,7 +685,7 @@ docker exec nginx-sample nginx -s reload
 
 </details>
 
-### 8.3 응답 코드 비정상 테스트
+### 7.3 응답 코드 비정상 테스트
 
 `/health` 응답 코드가 `200`이 아니도록 nginx 설정을 임시로 변경한다. 테스트 전 원본 설정을 백업한다.
 
@@ -727,7 +693,7 @@ docker exec nginx-sample nginx -s reload
 cp nginx/conf.d/default.conf nginx/conf.d/default.conf.bak
 ```
 
-`nginx/conf.d/default.conf`의 `/health` location을 테스트용으로 변경한다.
+`nginx/conf.d/default.conf`의 `/health` location을 다음과 같이 테스트용으로 변경한다.
 
 ```nginx
 location /health {
@@ -802,10 +768,19 @@ docker exec nginx-sample nginx -s reload
 
 </details>
 
-### 8.4 nginx active connections 증가 테스트
+</details>
+
+<details>
+<summary><strong>8. nginx 내부 지표 테스트 방법</strong></summary>
+
+## 8. nginx 내부 지표 테스트 방법
+
+nginx 내부 지표 테스트는 Agent 2가 수집한 값에 따라 Trigger와 Email Action이 정상 동작하는지 확인하는 절차이다.
+
+### 8.1 nginx active connections 증가 테스트
 
 active connection 부하는 `scripts/nginx_load_test.sh`의 `active` 모드로 발생시킨다.
-`nginx.conf`에는 테스트용 `/load-slow` endpoint가 포함되어 있으며, 이 endpoint는 응답을 천천히 내려보내 Zabbix 수집 주기 동안 connection이 유지되도록 한다.
+`nginx/conf.d/default.conf`에는 테스트용 `/load-slow` endpoint가 포함되어 있으며, 이 endpoint는 응답을 천천히 내려보내 Zabbix 수집 주기 동안 connection이 유지되도록 한다.
 
 현재 nginx 내부 지표 Item은 `30s` 주기로 수집된다.
 따라서 Warning Trigger인 `min(1m)>50`을 검증하려면 active connection 50 초과 상태가 최소 1분 이상 유지되어야 한다.
@@ -877,12 +852,12 @@ COUNT=110 DURATION=90 sh scripts/nginx_load_test.sh active
 
 </details>
 
-### 8.5 nginx request counter reset 테스트
+### 8.2 nginx request counter reset 테스트
 
 먼저 nginx request counter가 증가하도록 여러 번 요청을 발생시킨다.
 
 ```bash
-docker exec zabbix-server sh -c 'for i in $(seq 1 30); do wget -qO- http://nginx/status >/dev/null; done'
+COUNT=30 CONCURRENCY=10 TARGET_PATH=/status sh scripts/nginx_load_test.sh requests
 ```
 
 `Monitoring` > `Latest data`에서 `nginx total requests` 값이 증가한 것을 확인한 뒤 nginx 컨테이너를 재시작한다.
@@ -919,7 +894,7 @@ nginx 컨테이너가 정상 실행 중인지 확인하고, request counter가 �
 
 ```bash
 docker compose ps nginx
-docker exec zabbix-server sh -c 'wget -qO- http://nginx/status >/dev/null'
+COUNT=1 CONCURRENCY=1 TARGET_PATH=/status sh scripts/nginx_load_test.sh requests
 ```
 
 복구 후 기대 결과:
@@ -943,10 +918,10 @@ docker exec zabbix-server sh -c 'wget -qO- http://nginx/status >/dev/null'
 
 </details>
 
-### 8.6 nginx 부하 테스트 반복 실험
+### 8.3 nginx 부하 테스트 반복 실험
 
-nginx 관련 Item의 적정 수집 주기와 Trigger 반응성을 확인하려면 짧은 요청 증가 테스트와 active connection 유지 테스트를 분리해서 수행한다.
-현재 XML 기준 nginx 내부 지표 Item은 `30s` 주기로 수집되므로, active connection 부하는 최소 `90s` 이상 유지해야 Zabbix 수집 시점에 안정적으로 관측된다.
+nginx 관련 Item의 적정 수집 주기와 Trigger 반응성을 확인하려면 짧은 요청 증가 테스트와 active connection 유지 테스트를 분리해서 수행한다.<br>
+기본적으로 nginx 내부 지표 Item은 `30s` 주기로 수집되므로, active connection 부하는 최소 `90s` 이상 유지해야 Zabbix 수집 시점에 안정적으로 관측된다.
 
 현재 값을 먼저 확인한다.
 
@@ -954,14 +929,14 @@ nginx 관련 Item의 적정 수집 주기와 Trigger 반응성을 확인하려�
 sh scripts/nginx_load_test.sh status
 ```
 
-짧은 요청 부하는 `nginx total requests` 증가 여부와 Web Scenario 응답시간 변화를 확인하는 용도로 사용한다.
+다음과 같이 짧은 요청 부하는 `nginx total requests` 증가 여부와 Web Scenario 응답시간 변화를 확인하는 용도로 사용한다.
 
 ```bash
 COUNT=300 CONCURRENCY=20 TARGET_PATH=/status sh scripts/nginx_load_test.sh requests
 ```
 
 active connection 부하는 `nginx active connections is high`와 `nginx active connections is critically high` Trigger의 기준값과 수집 주기가 적절한지 확인하는 용도로 사용한다.
-`COUNT`는 동시 요청 수, `DURATION`은 연결을 유지할 시간이다.
+이때, `COUNT`는 동시 요청 수, `DURATION`은 연결을 유지할 시간이다.
 
 ```bash
 COUNT=60 DURATION=90 sh scripts/nginx_load_test.sh active
@@ -978,13 +953,10 @@ COUNT=60 DURATION=90 sh scripts/nginx_load_test.sh active
 | 동시접속 60개 | `COUNT=60 DURATION=90 sh scripts/nginx_load_test.sh active` | `nginx active connections is high` Warning 발생 여부 |
 | 동시접속 110개 | `COUNT=110 DURATION=90 sh scripts/nginx_load_test.sh active` | `nginx active connections is critically high` High 발생 여부 |
 
-효율적인 운영 기준은 다음과 같이 판단한다.
-
+효율적인 운영 기준을 파악할 때, 다음과 같은 예시를 참고한다.
 * `30s` 수집 주기에서는 부하를 최소 `90s` 유지해야 누락 가능성이 낮다.
-* 기존 `last()>50` 단일 기준은 빠르게 감지할 수 있지만 순간 피크에도 민감하게 반응한다.
-* 순간 급격 과부하는 `last()>100` 조건으로 High 알림을 발생시킨다.
-* 지속 과부하는 `min(1m)>50` 조건으로 Warning 알림을 발생시켜 일시적인 피크와 구분한다.
-* Web Scenario는 `1m` 주기와 `Attempts 1`이면 빠르게 감지하지만, 네트워크 흔들림에 민감하다.
+* 지속적인 과부하는 `min(1m)>50` 조건으로 Warning 알림을 발생시켜 일시적인 피크와 구분한다.
+* 급격한 과부하는 `last()>100` 조건으로 High 알림을 발생시킨다.
 * 오탐을 줄이고 싶으면 Web Scenario `Attempts`를 `2`로 올리고, 장애 감지 시간이 약 1회 주기만큼 늦어지는지 확인한다.
 
 </details>
@@ -994,64 +966,12 @@ COUNT=60 DURATION=90 sh scripts/nginx_load_test.sh active
 
 ## 9. Browser Item 기반 Midibus E2E 모니터링
 
-Midibus 사용자 웹페이지는 Zabbix Agent 기반으로 직접 운영 상태를 수집하는 대상이 아니라, 실제 브라우저에서 사용자 행동을 수행하여 기능 정상 여부를 검증하는 외부 서비스 대상이다.
-따라서 `midibus-web` Host는 Agent interface 없이 Browser Item, Dependent Item, Trigger를 구성하는 논리 Host로 사용한다.
+Midibus는 Zabbix Agent 기반으로 직접 운영 상태를 수집하는 대상이 아니라, 외부 서비스 대상이다.<br>
+따라서 `midibus-web` Host는 Agent interface 없이 Browser Item, Dependent Item, Trigger를 구성하는 논리 Host로 사용한다.<br>
+Zabbix Server의 Browser poller가 Selenium WebDriver로 접속하도록 설정되었으며, 이때 Selenium Chrome 컨테이너는 Browser Item에서 실제 브라우저 실행을 담당한다.
 
-Browser Item 실행을 위해 `selenium/standalone-chrome` 컨테이너를 Docker Compose에 추가하고, Zabbix Server의 Browser poller가 Selenium WebDriver로 접속하도록 설정한다.
 
-### 9.1 Selenium Chrome 및 Browser poller 구성
-
-`docker-compose.yml`에서 Zabbix Server에 WebDriver URL과 Browser poller 수를 설정한다.
-
-```yaml
-zabbix-server:
-  environment:
-    ZBX_WEBDRIVERURL: http://selenium-chrome:4444
-    ZBX_STARTBROWSERPOLLERS: 2
-```
-
-Selenium Chrome 컨테이너는 Browser Item에서 실제 브라우저 실행을 담당한다.
-미디어 업로드 시 Selenium 컨테이너 내부에서 접근 가능한 파일 경로가 필요하므로 테스트용 영상 파일을 읽기 전용 볼륨으로 마운트한다.
-
-```yaml
-selenium-chrome:
-  image: selenium/standalone-chrome:4.21.0
-  container_name: selenium-chrome
-  restart: unless-stopped
-  shm_size: "2gb"
-  expose:
-    - "4444"
-  volumes:
-    - ./zabbix/browser-files:/opt/zabbix/browser-files:ro
-```
-
-### 9.2 Midibus Host 및 매크로
-
-`midibus-web` Host에는 Agent interface를 설정하지 않는다.
-Browser Item에서 사용할 값은 Host macro로 분리한다.
-
-| Macro | 용도 |
-| --- | --- |
-| `{$MIDIBUS_URL}` | Midibus 로그인 URL |
-| `{$MIDIBUS_USER}` | 로그인 사용자 ID |
-| `{$MIDIBUS_PASSWORD}` | 로그인 비밀번호 |
-| `{$MIDIBUS_TEST_PREFIX}` | 테스트 데이터 접두어 |
-| `{$MIDIBUS_TEST_VIDEO_PATH}` | Selenium 컨테이너 내부 테스트 영상 경로 |
-| `{$MIDIBUS_ALLOWED_IP}` | 보안 재생키 허용 IP |
-
-테스트 영상 파일은 다음 경로에 저장한다.
-
-```text
-zabbix/browser-files/zbx-bi-test-video.mp4
-```
-
-Browser Item Parameter에서 사용하는 영상 경로는 Selenium 컨테이너 내부 경로이다.
-
-```text
-/opt/zabbix/browser-files/zbx-bi-test-video.mp4
-```
-
-### 9.3 Browser Item 구성
+### 9.1 Browser Item 구성
 
 Midibus 주요 기능 검증을 5개 Browser Item으로 분리하여 구성한다.
 각 Browser Item은 로그인부터 시작하여 독립적으로 실행되도록 구성한다.
@@ -1065,7 +985,7 @@ Midibus 주요 기능 검증을 5개 Browser Item으로 분리하여 구성한�
 | 5 | `Midibus browser sub user check` | `midibus_browser_sub_user_lifecycle` | 보조 사용자 추가, 권한 변경, 삭제 확인 |
 
 <details>
-<summary><strong>Browser Item substep 목록 보기</strong></summary>
+<summary><strong>Browser Item substep 상세 목록 보기</strong></summary>
 
 #### Step 1. 로그인 확인
 
@@ -1082,7 +1002,7 @@ Midibus 주요 기능 검증을 5개 Browser Item으로 분리하여 구성한�
 2. 튜토리얼/안내 팝업 닫기
 3. 미디어 메뉴 열기
 4. 카테고리 추가 버튼 클릭
-5. 테스트 접두어 기반 카테고리명 입력
+5. 카테고리명 입력
 6. 카테고리 추가 버튼 클릭
 7. 설정 메뉴로 이동
 8. 카테고리 탭 선택
@@ -1126,7 +1046,7 @@ Midibus 주요 기능 검증을 5개 Browser Item으로 분리하여 구성한�
 10. 배포 URL에 적용
 11. 보안 재생키 생성 창 닫기
 12. 배포 URL을 새 브라우저 페이지로 열기
-13. JW Player 재생 버튼 클릭
+13. Player 재생 버튼 클릭
 14. `play secure video` performance mark 기록
 
 #### Step 5. 보조 사용자 추가, 권한 변경, 삭제
@@ -1180,7 +1100,7 @@ Midibus 주요 기능 검증을 5개 Browser Item으로 분리하여 구성한�
 각 Browser Item의 Type of information은 JSON 결과를 저장하기 위해 `Text`로 설정한다.
 실행 결과는 Browser Item 원본 값에 JSON 형태로 저장되며, Trigger 판단에는 Dependent Item을 사용한다.
 
-### 9.4 Browser Item 실행 결과 검증 구조
+### 9.2 Browser Item 실행 결과 검증 구조
 
 Browser Item은 실행 결과를 Text JSON으로 반환하므로, Trigger에서 바로 성공/실패를 판단하기 어렵다.
 따라서 원본 Browser Item마다 Dependent Item을 생성하여 실행 상태와 기능 검증 상태를 숫자값으로 변환한다.
@@ -1262,7 +1182,7 @@ return 0;
 | 보안 재생키 재생 | `play secure video` |
 | 보조 사용자 관리 | `delete sub user` |
 
-### 9.5 Browser Item Trigger 구성
+### 9.3 Browser Item Trigger 구성
 
 Browser Item 관련 Trigger는 2개로 구성한다.
 
@@ -1271,40 +1191,14 @@ Browser Item 관련 Trigger는 2개로 구성한다.
 | `Browser Item execution failed` | High | Browser Item 스크립트 실행 실패 감지 |
 | `Midibus feature validation failed` | High | 로그인 또는 주요 기능 검증 실패 감지 |
 
-`Browser Item execution failed` Trigger는 5개 `execution.status` Dependent Item 중 하나라도 `0`이면 발생한다.
-
-```text
-last(/midibus-web/midibus.browser.login.execution.status)=0
-or last(/midibus-web/midibus.browser.category_channel.execution.status)=0
-or last(/midibus-web/midibus.browser.media_crud.execution.status)=0
-or last(/midibus-web/midibus.browser.secure_playback.execution.status)=0
-or last(/midibus-web/midibus.browser.sub_user_lifecycle.execution.status)=0
-```
-
-Trigger의 Operational data에는 각 `execution.message` 값을 표시하여 어떤 시나리오에서 어떤 오류가 발생했는지 확인할 수 있도록 한다.
-
-```text
-login: {midibus-web:midibus.browser.login.execution.message.last()}
-category/channel: {midibus-web:midibus.browser.category_channel.execution.message.last()}
-media CRUD: {midibus-web:midibus.browser.media_crud.execution.message.last()}
-secure playback: {midibus-web:midibus.browser.secure_playback.execution.message.last()}
-sub user lifecycle: {midibus-web:midibus.browser.sub_user_lifecycle.execution.message.last()}
-```
-
+`Browser Item execution failed` Trigger는 5개 `execution.status` Dependent Item 중 하나라도 `0`이면 발생한다. <br>
 `Midibus feature validation failed` Trigger는 5개 `validation.status` Dependent Item 중 하나라도 `0`이면 발생한다.
 
-```text
-last(/midibus-web/midibus.browser.login.validation.status)=0
-or last(/midibus-web/midibus.browser.category_channel.validation.status)=0
-or last(/midibus-web/midibus.browser.media_crud.validation.status)=0
-or last(/midibus-web/midibus.browser.secure_playback.validation.status)=0
-or last(/midibus-web/midibus.browser.sub_user_lifecycle.validation.status)=0
-```
 
-### 9.6 Browser Item Email 알림
+### 9.4 Browser Item Email 알림
 
-Browser Item 관련 알림은 기존 Email Media type과 사용자 Media 설정을 사용한다.
-Trigger별 메시지 제목은 실행 실패와 기능 검증 실패가 구분되도록 구성한다.
+Browser Item 관련 알림은 Email Media type과 사용자 Media 설정을 사용한다.<br>
+Trigger별 메시지 제목은 실행 실패와 기능 검증 실패가 구분되도록 다음과 같이 구성한다.
 
 Browser Item 실행 실패 알림 제목:
 
@@ -1341,17 +1235,14 @@ Event ID: {EVENT.ID}
 
 ## 10. Browser Item 장애 테스트 방법
 
-Browser Item 장애 테스트는 Midibus 실제 서비스 데이터에 영향을 최소화하는 방식으로 수행한다.
-실행 실패와 기능 검증 실패를 분리하여 테스트함으로써 두 Trigger가 각각 의도한 조건에서 동작하는지 확인한다.
-
 ### 10.1 Browser Item 실행 실패 테스트
 
 `Browser Item execution failed` Trigger는 Browser Item 실행 결과에 오류가 발생했을 때 동작하는지 확인한다.
-테스트는 `{$MIDIBUS_PASSWORD}` Host macro 값을 임시로 잘못된 값으로 변경하여 로그인 실패를 유도하는 방식으로 수행했다.
+테스트는 `{$MIDIBUS_PASSWORD}` Host macro 값을 임시로 잘못된 값으로 변경하여 로그인 실패를 유도하는 방식으로 수행한다.
 
 테스트 절차:
 
-1. `midibus-web` Host macro에서 `{$MIDIBUS_PASSWORD}` 값을 임시 오입력한다.
+1. `midibus-web` Host macro에서 `{$MIDIBUS_PASSWORD}` 값을 임시로 오입력한다.
 2. Browser Item을 실행하여 로그인 실패를 발생시킨다.
 3. `execution.status` 값이 `0`으로 변경되는지 확인한다.
 4. `execution.message`에 실패한 시나리오와 오류 메시지가 기록되는지 확인한다.
@@ -1408,8 +1299,7 @@ Browser Item 장애 테스트는 Midibus 실제 서비스 데이터에 영향을
 
 ### 10.2 Midibus 기능 검증 실패 테스트
 
-`Midibus feature validation failed` Trigger는 Browser Item 스크립트 실행은 성공했지만 기대한 기능 검증 mark가 없을 때 동작하는지 확인한다.
-테스트는 보안 재생키 재생 시나리오의 validation expected mark를 임시로 `play secure video`에서 `intentional failure test`로 변경하여 수행했다.
+`Midibus feature validation failed` Trigger는 Browser Item 스크립트 실행은 성공했지만 validation expected mark(= performance mark)가 없을 때 동작해야 한다. 이를 확인하기 위해, "Step 4: 보안 재생키 생성 및 영상 재생" 시나리오의 validation expected mark를 임시로 `play secure video`에서 `intentional failure test`로 변경한 후 Browser Item을 실행한다.
 
 테스트 절차:
 
@@ -1530,4 +1420,3 @@ No media defined for user
   * 최종적으로 각 Browser Item은 마지막 성공 mark가 기록되는지 확인하여 시나리오 전체가 끝까지 수행되는지 검증
 
 </details>
-
