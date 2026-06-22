@@ -22,6 +22,28 @@ from urllib.request import Request, urlopen
 DEFAULT_API_URL = "http://127.0.0.1:8080/api_jsonrpc.php"
 DEFAULT_DASHBOARD_NAME = "Zabbix E2E Web Monitoring"
 
+WIDGET_FIELD_TYPE_INT32 = 0
+WIDGET_FIELD_TYPE_STR = 1
+WIDGET_FIELD_TYPE_HOST = 3
+WIDGET_FIELD_TYPE_ITEM = 4
+
+ZABBIX_SERVER_HOST = "Zabbix server"
+NGINX_HOST = "nginx-sample"
+MIDIBUS_HOST = "midibus-web"
+
+NGINX_ITEM_KEYS = {
+    "active_connections": (
+        "system.run[sh /var/lib/zabbix/user_scripts/"
+        "nginx_active_connections.sh]"
+    ),
+    "process_count": (
+        "system.run[sh /var/lib/zabbix/user_scripts/nginx_process_count.sh]"
+    ),
+    "total_requests": (
+        "system.run[sh /var/lib/zabbix/user_scripts/nginx_total_requests.sh]"
+    ),
+}
+
 
 class ZabbixApiError(RuntimeError):
     pass
@@ -85,7 +107,83 @@ class ZabbixApi:
             self.auth = None
 
 
-def dashboard_payload(name: str) -> dict[str, Any]:
+def resolve_host_ids(api: ZabbixApi) -> dict[str, str]:
+    expected_hosts = [ZABBIX_SERVER_HOST, NGINX_HOST, MIDIBUS_HOST]
+    hosts = api.call(
+        "host.get",
+        {
+            "output": ["hostid", "host"],
+            "filter": {"host": expected_hosts},
+        },
+    )
+    host_ids = {host["host"]: host["hostid"] for host in hosts}
+    missing_hosts = [host for host in expected_hosts if host not in host_ids]
+
+    if missing_hosts:
+        raise ZabbixApiError(
+            "Dashboard hosts not found: "
+            f"{', '.join(missing_hosts)}. Import the project Host XML files first."
+        )
+
+    return host_ids
+
+
+def resolve_nginx_item_ids(api: ZabbixApi, nginx_host_id: str) -> dict[str, str]:
+    items = api.call(
+        "item.get",
+        {
+            "output": ["itemid", "key_"],
+            "hostids": [nginx_host_id],
+            "filter": {"key_": list(NGINX_ITEM_KEYS.values())},
+        },
+    )
+    item_ids_by_key = {item["key_"]: item["itemid"] for item in items}
+    missing_items = [
+        name for name, key in NGINX_ITEM_KEYS.items() if key not in item_ids_by_key
+    ]
+
+    if missing_items:
+        raise ZabbixApiError(
+            "Dashboard nginx Items not found: "
+            f"{', '.join(missing_items)}. Import the nginx-sample Host XML first."
+        )
+
+    return {
+        name: item_ids_by_key[key]
+        for name, key in NGINX_ITEM_KEYS.items()
+    }
+
+
+def widget_field(field_type: int, name: str, value: Any) -> dict[str, Any]:
+    return {"type": field_type, "name": name, "value": value}
+
+
+def host_filter(host_id: str) -> list[dict[str, Any]]:
+    return [widget_field(WIDGET_FIELD_TYPE_HOST, "hostids.0", host_id)]
+
+
+def item_graph(
+    name: str, item_id: str, x: int, y: int, width: int = 24, height: int = 5
+) -> dict[str, Any]:
+    return {
+        "type": "graph",
+        "name": name,
+        "x": x,
+        "y": y,
+        "width": width,
+        "height": height,
+        "fields": [
+            widget_field(WIDGET_FIELD_TYPE_INT32, "source_type", 1),
+            widget_field(WIDGET_FIELD_TYPE_ITEM, "itemid.0", item_id),
+        ],
+    }
+
+
+def dashboard_payload(
+    name: str,
+    host_ids: dict[str, str],
+    nginx_item_ids: dict[str, str],
+) -> dict[str, Any]:
     return {
         "name": name,
         "private": 0,
@@ -147,12 +245,136 @@ def dashboard_payload(name: str) -> dict[str, Any]:
                         "y": 0,
                         "width": 72,
                         "height": 5,
+                        "fields": host_filter(host_ids[MIDIBUS_HOST]),
                     },
                     {
                         "type": "actionlog",
                         "name": "Browser Alert Action Log",
                         "x": 0,
                         "y": 5,
+                        "width": 72,
+                        "height": 4,
+                    },
+                ],
+            },
+            {
+                "name": "Web Scenario",
+                "widgets": [
+                    {
+                        "type": "web",
+                        "name": "Web Scenario Status",
+                        "x": 0,
+                        "y": 0,
+                        "width": 72,
+                        "height": 5,
+                        "fields": host_filter(host_ids[ZABBIX_SERVER_HOST]),
+                    },
+                    {
+                        "type": "problems",
+                        "name": "Web Scenario Problems",
+                        "x": 0,
+                        "y": 5,
+                        "width": 72,
+                        "height": 5,
+                        "fields": [
+                            *host_filter(host_ids[ZABBIX_SERVER_HOST]),
+                            widget_field(
+                                WIDGET_FIELD_TYPE_STR,
+                                "problem",
+                                "Nginx",
+                            ),
+                        ],
+                    },
+                    {
+                        "type": "actionlog",
+                        "name": "Web Scenario Alert Action Log",
+                        "x": 0,
+                        "y": 10,
+                        "width": 72,
+                        "height": 4,
+                    },
+                ],
+            },
+            {
+                "name": "nginx System",
+                "widgets": [
+                    {
+                        "type": "itemhistory",
+                        "name": "nginx Latest Metrics",
+                        "x": 0,
+                        "y": 0,
+                        "width": 72,
+                        "height": 5,
+                        "fields": [
+                            widget_field(
+                                WIDGET_FIELD_TYPE_INT32,
+                                "show_timestamp",
+                                1,
+                            ),
+                            widget_field(
+                                WIDGET_FIELD_TYPE_STR,
+                                "columns.0.name",
+                                "Active connections",
+                            ),
+                            widget_field(
+                                WIDGET_FIELD_TYPE_ITEM,
+                                "columns.0.itemid",
+                                nginx_item_ids["active_connections"],
+                            ),
+                            widget_field(
+                                WIDGET_FIELD_TYPE_STR,
+                                "columns.1.name",
+                                "Process count",
+                            ),
+                            widget_field(
+                                WIDGET_FIELD_TYPE_ITEM,
+                                "columns.1.itemid",
+                                nginx_item_ids["process_count"],
+                            ),
+                            widget_field(
+                                WIDGET_FIELD_TYPE_STR,
+                                "columns.2.name",
+                                "Total requests",
+                            ),
+                            widget_field(
+                                WIDGET_FIELD_TYPE_ITEM,
+                                "columns.2.itemid",
+                                nginx_item_ids["total_requests"],
+                            ),
+                        ],
+                    },
+                    item_graph(
+                        "Active Connections",
+                        nginx_item_ids["active_connections"],
+                        0,
+                        5,
+                    ),
+                    item_graph(
+                        "Process Count",
+                        nginx_item_ids["process_count"],
+                        24,
+                        5,
+                    ),
+                    item_graph(
+                        "Total Requests",
+                        nginx_item_ids["total_requests"],
+                        48,
+                        5,
+                    ),
+                    {
+                        "type": "problems",
+                        "name": "nginx Internal Problems",
+                        "x": 0,
+                        "y": 10,
+                        "width": 72,
+                        "height": 5,
+                        "fields": host_filter(host_ids[NGINX_HOST]),
+                    },
+                    {
+                        "type": "actionlog",
+                        "name": "nginx Alert Action Log",
+                        "x": 0,
+                        "y": 15,
                         "width": 72,
                         "height": 4,
                     },
@@ -201,9 +423,21 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
-    payload = dashboard_payload(args.name)
 
     if args.dry_run:
+        payload = dashboard_payload(
+            args.name,
+            {
+                ZABBIX_SERVER_HOST: "<ZABBIX_SERVER_HOST_ID>",
+                NGINX_HOST: "<NGINX_HOST_ID>",
+                MIDIBUS_HOST: "<MIDIBUS_HOST_ID>",
+            },
+            {
+                "active_connections": "<NGINX_ACTIVE_CONNECTIONS_ITEM_ID>",
+                "process_count": "<NGINX_PROCESS_COUNT_ITEM_ID>",
+                "total_requests": "<NGINX_TOTAL_REQUESTS_ITEM_ID>",
+            },
+        )
         print(json.dumps(payload, ensure_ascii=False, indent=2))
         return 0
 
@@ -211,6 +445,9 @@ def main() -> int:
 
     try:
         api.login()
+        host_ids = resolve_host_ids(api)
+        nginx_item_ids = resolve_nginx_item_ids(api, host_ids[NGINX_HOST])
+        payload = dashboard_payload(args.name, host_ids, nginx_item_ids)
 
         existing = api.call(
             "dashboard.get",
