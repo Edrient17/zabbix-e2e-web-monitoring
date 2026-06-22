@@ -192,7 +192,7 @@ Password: zabbix
 
 <br>
 
-** Import 대상 XML 파일은 다음과 같다.
+Import 대상 XML 파일은 다음과 같다.
 
 | XML 파일 | 포함 내용 |
 | --- | --- |
@@ -202,7 +202,7 @@ Password: zabbix
 
 <br>
 
-** `midibus-web` Host에서 실제 환경에 맞게 다시 설정해야 하는 주요 macro는 다음과 같다.
+`midibus-web` Host에서 실제 환경에 맞게 다시 설정해야 하는 주요 macro는 다음과 같다.
 
 | Macro | 용도 |
 | --- | --- |
@@ -221,7 +221,7 @@ Password: zabbix
 
 <br>
 
-** Trigger Action은 Host export XML에 포함되지 않으므로 새 환경에서는 직접 등록해야 한다.<br>
+Trigger Action은 Host export XML에 포함되지 않으므로 새 환경에서는 직접 등록해야 한다.<br>
 본 프로젝트에서 사용한 Action은 다음 4개이다.
 
 ```text
@@ -233,9 +233,9 @@ Notify nginx web scenario problem
 
 <br>
 
-** 각 Action의 조건, Operation, Recovery operation 설정값은 6.6 알람 발송 설정과 9.6 Browser Item Email 알림을 기준으로 등록한다.
+각 Action의 조건, Operation, Recovery operation 설정값은 6.6 알람 발송 설정과 9.4 Browser Item Email 알림을 기준으로 등록한다.
 
-** Dashboard는 Zabbix API로 생성한다. 기본 접속 정보(`Admin` / `zabbix`)를 그대로 사용하는 경우 다음 명령어로 생성할 수 있다.
+Dashboard는 Zabbix API로 생성한다. 기본 접속 정보(`Admin` / `zabbix`)를 그대로 사용하는 경우 다음 명령어로 생성할 수 있다.
 
 ```bash
 python3 zabbix/api/create_dashboard.py
@@ -259,13 +259,13 @@ python3 zabbix/api/create_dashboard.py
 unset ZABBIX_URL ZABBIX_USER ZABBIX_PASSWORD
 ```
 
-** 만약 동일한 이름의 Dashboard가 이미 있으면 중복 생성되지 않는다. 이 경우에는 기존 Dashboard를 삭제하고 다시 생성하기 위해 `--replace` 옵션을 사용한다.
+만약 동일한 이름의 Dashboard가 이미 있으면 중복 생성되지 않는다. 이 경우에는 기존 Dashboard를 삭제하고 다시 생성하기 위해 `--replace` 옵션을 사용한다.
 
 ```bash
 python3 zabbix/api/create_dashboard.py --replace
 ```
 
-** 초기 구성 후에는 Dashboard, Web Scenario 최신 데이터, Browser Item 최신 데이터, `Reports` > `Action log`의 발송 결과를 확인한다.
+초기 구성 후에는 Dashboard, Web Scenario 최신 데이터, Browser Item 최신 데이터, `Reports` > `Action log`의 발송 결과를 확인한다.
 
 ### 4.7 서비스 중지
 
@@ -1111,68 +1111,11 @@ Browser Item은 실행 결과를 Text JSON으로 반환하므로, Trigger에서 
 | `execution.message` | Text | 실행 실패 시 오류 메시지 표시 |
 | `validation.status` | Numeric unsigned | 기대한 기능 검증 mark가 기록되었는지 판단 |
 
-<p><sub>Browser Item 및 Dependent Item 정상 실행 결과</sub></p>
+- `execution.status`는 Browser Item 결과 JSON에 `error.message`가 있으면 `0`, 없으면 `1`을 반환한다.
+- `execution.message`는 실패 시 시나리오 이름과 오류 메시지를 반환하고, 정상일 때는 빈 문자열을 반환한다.
+- `validation.status`는 Browser Item 결과 JSON의 performance mark에 기대한 최종 성공 mark가 있는지 확인한다.
 
-<img src="images/screenshots/week3/browser_item_latest_data.png" alt="browser_item_latest_data" width="720">
-
-`execution.status`는 Browser Item 결과 JSON에 `error.message`가 있으면 `0`, 없으면 `1`을 반환한다.
-
-```javascript
-var data = JSON.parse(value);
-
-if (data.error && data.error.message) {
-    return 0;
-}
-
-return 1;
-```
-
-`execution.message`는 실패 시 시나리오 이름과 오류 메시지를 반환하고, 정상일 때는 빈 문자열을 반환한다.
-
-```javascript
-var data = JSON.parse(value);
-
-if (data.error && data.error.message) {
-    return "media_crud: " + data.error.message;
-}
-
-return "";
-```
-
-`validation.status`는 Browser Item 결과 JSON의 performance mark에 기대한 최종 성공 mark가 있는지 확인한다.
-
-```javascript
-var data = JSON.parse(value);
-
-if (data.error && data.error.message) {
-    return 1;
-}
-
-var expectedMark = "delete media";
-var marks = [];
-
-if (data.performance_data && data.performance_data.marks) {
-    marks = data.performance_data.marks;
-}
-
-if (
-    data.performance_data &&
-    data.performance_data.details &&
-    data.performance_data.details.marks
-) {
-    marks = data.performance_data.details.marks;
-}
-
-for (var i = 0; i < marks.length; i++) {
-    if (marks[i].name === expectedMark) {
-        return 1;
-    }
-}
-
-return 0;
-```
-
-각 시나리오의 최종 성공 mark는 다음과 같다.
+각 시나리오의 최종 성공 mark는 Browser Item Step 성공적으로 완료되었음을 의미하며, 시나리오별 performance mark(= validation expected mark)는 다음과 같다.
 
 | 시나리오 | validation expected mark |
 | --- | --- |
@@ -1181,6 +1124,10 @@ return 0;
 | 미디어 업로드/삭제 | `delete media` |
 | 보안 재생키 재생 | `play secure video` |
 | 보조 사용자 관리 | `delete sub user` |
+
+<p><sub>Browser Item 및 Dependent Item 정상 실행 결과</sub></p>
+
+<img src="images/screenshots/week3/browser_item_latest_data.png" alt="browser_item_latest_data" width="720">
 
 ### 9.3 Browser Item Trigger 구성
 
@@ -1191,8 +1138,8 @@ Browser Item 관련 Trigger는 2개로 구성한다.
 | `Browser Item execution failed` | High | Browser Item 스크립트 실행 실패 감지 |
 | `Midibus feature validation failed` | High | 로그인 또는 주요 기능 검증 실패 감지 |
 
-`Browser Item execution failed` Trigger는 5개 `execution.status` Dependent Item 중 하나라도 `0`이면 발생한다. <br>
-`Midibus feature validation failed` Trigger는 5개 `validation.status` Dependent Item 중 하나라도 `0`이면 발생한다.
+- `Browser Item execution failed` Trigger는 5개 `execution.status` Dependent Item 중 하나라도 `0`이면 발생한다. <br>
+- `Midibus feature validation failed` Trigger는 5개 `validation.status` Dependent Item 중 하나라도 `0`이면 발생한다.
 
 
 ### 9.4 Browser Item Email 알림
