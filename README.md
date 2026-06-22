@@ -236,6 +236,7 @@ Notify nginx web scenario problem
 각 Action의 조건, Operation, Recovery operation 설정값은 6.6 알람 발송 설정과 9.4 Browser Item Email 알림을 기준으로 등록한다.
 
 Dashboard는 Zabbix API로 생성한다. 기본 접속 정보(`Admin` / `zabbix`)를 그대로 사용하는 경우 다음 명령어로 생성할 수 있다.
+생성되는 Dashboard는 `Overview`, `Browser Items`, `Web Scenario`, `nginx System`의 4개 탭으로 구성되며 전체 현황과 대상별 상태, 문제, 지표 및 알림 이력을 제공한다.
 
 ```bash
 python3 zabbix/api/create_dashboard.py
@@ -401,7 +402,7 @@ nginx Web Scenario는 `Zabbix server` Host 아래에 등록한다.
 | Update interval | `1m` |
 | Attempts | `1` |
 | Agent | `Zabbix` |
-| Headers | `User-Agent: Zabbix-WebScenario/1.0` |
+| Headers | `User-Agent: Zabbix-Web-Monitor/1.0` |
 
 Scenario Step은 다음과 같이 구성한다.
 
@@ -623,6 +624,8 @@ cp nginx/conf.d/default.conf nginx/conf.d/default.conf.bak
 
 ```nginx
 location /status {
+    auth_basic "Zabbix sample";
+    auth_basic_user_file /etc/nginx/.htpasswd;
     default_type text/plain;
     limit_rate 20;
     return 200 "status check slow response test data data data data data data data data data data\n";
@@ -697,6 +700,8 @@ cp nginx/conf.d/default.conf nginx/conf.d/default.conf.bak
 
 ```nginx
 location /health {
+    auth_basic "Zabbix sample";
+    auth_basic_user_file /etc/nginx/.htpasswd;
     default_type text/plain;
     return 500 "health error\n";
 }
@@ -1357,12 +1362,10 @@ No media defined for user
 
   * Browser Item JavaScript를 Zabbix UI에 입력하거나 파일로 정리하는 과정에서 한글 문자열이 깨지거나 다르게 전달될 수 있음
   * 한글 버튼 텍스트 기반 XPath는 인코딩, 공백, 렌더링 상태에 민감하여 안정성이 낮음
-  * Midibus 화면에는 `id`, `onclick`, `type`, `data-bs-target` 등 더 안정적인 HTML 속성이 존재했지만 초기 스크립트 일부는 화면 텍스트 기준으로 요소를 찾고 있었음
 
 * 해결:
 
   * 한글 UI 텍스트 기반 selector 사용을 줄이고, 가능한 경우 `id`, `onclick`, `type`, `data-bs-target` 기반 selector로 변경
-  * 예를 들어 저장 버튼은 버튼 텍스트 대신 `#vodChannelConfigSaveBtn`, 로그인 입력은 `#username`, 비밀번호 입력은 `input[type='password']`처럼 안정적인 속성으로 참조
   * 결과 JSON의 performance mark를 확인하여 어느 단계까지 실행되었는지 추적하고, 중단 지점의 selector를 우선 수정
   * 최종적으로 각 Browser Item은 마지막 성공 mark가 기록되는지 확인하여 시나리오 전체가 끝까지 수행되는지 검증
 
