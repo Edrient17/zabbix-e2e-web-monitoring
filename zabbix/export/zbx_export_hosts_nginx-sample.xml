@@ -26,17 +26,17 @@
             <items>
                 <item>
                     <name>nginx active connections</name>
-                    <key>system.run[sh /var/lib/zabbix/user_scripts/nginx_active_connections.sh]</key>
+                    <key>nginx.active_connections</key>
                     <delay>30s</delay>
                     <interface_ref>if1</interface_ref>
                     <triggers>
                         <trigger>
-                            <expression>last(/nginx-sample/system.run[sh /var/lib/zabbix/user_scripts/nginx_active_connections.sh])&gt;100</expression>
+                            <expression>last(/nginx-sample/nginx.active_connections)&gt;100</expression>
                             <name>nginx active connections is critically high</name>
                             <priority>HIGH</priority>
                         </trigger>
                         <trigger>
-                            <expression>min(/nginx-sample/system.run[sh /var/lib/zabbix/user_scripts/nginx_active_connections.sh],1m)&gt;50</expression>
+                            <expression>min(/nginx-sample/nginx.active_connections,1m)&gt;50</expression>
                             <name>nginx active connections is high</name>
                             <priority>WARNING</priority>
                         </trigger>
@@ -44,18 +44,18 @@
                 </item>
                 <item>
                     <name>nginx process count</name>
-                    <key>system.run[sh /var/lib/zabbix/user_scripts/nginx_process_count.sh]</key>
+                    <key>nginx.process_count</key>
                     <delay>30s</delay>
                     <interface_ref>if1</interface_ref>
                 </item>
                 <item>
                     <name>nginx total requests</name>
-                    <key>system.run[sh /var/lib/zabbix/user_scripts/nginx_total_requests.sh]</key>
+                    <key>nginx.total_requests</key>
                     <delay>30s</delay>
                     <interface_ref>if1</interface_ref>
                     <triggers>
                         <trigger>
-                            <expression>change(/nginx-sample/system.run[sh /var/lib/zabbix/user_scripts/nginx_total_requests.sh])&lt;0</expression>
+                            <expression>change(/nginx-sample/nginx.total_requests)&lt;0</expression>
                             <name>nginx request counter reset detected</name>
                             <priority>INFO</priority>
                         </trigger>
