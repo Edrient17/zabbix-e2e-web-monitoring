@@ -311,7 +311,7 @@ nginx 샘플 웹서비스는 Web Scenario 가용성 점검과 nginx 내부 지�
 ### 5.2 zabbix-agent2 UserParameter 기반 nginx 내부 상태 수집
 
 `nginx-agent2`는 UserParameter item을 통해 스크립트를 실행하고 nginx 프로세스 및 내부 지표를 수집한다.
-UserParameter 설정은 `zabbix/agent2/nginx-userparameter.conf`에 정의되어 있으며, Docker Compose에서 Agent2 설정 디렉터리로 읽기 전용 마운트된다.
+UserParameter 설정은 `zabbix/agent2/nginx-userparameter.conf`에 정의되어 있으며, Docker Compose에서 Agent2가 include하는 `/etc/zabbix/zabbix_agentd.d/` 디렉터리로 읽기 전용 마운트된다.
 
 Zabbix UI에서 `nginx-sample` 호스트를 별도로 만들고 Agent Interface를 DNS `nginx-agent2`, Port `10050`으로 설정한다.
 이후 다음 item key를 Zabbix agent 타입으로 등록한다.
