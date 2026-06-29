@@ -104,9 +104,9 @@ services:
       ZBX_HOSTNAME: nginx-sample
       ZBX_SERVER_HOST: zabbix-server
       ZBX_SERVER_PORT: 10051
-      ZBX_ALLOWKEY: system.run[sh /var/lib/zabbix/user_scripts/nginx_process_count.sh],system.run[sh /var/lib/zabbix/user_scripts/nginx_active_connections.sh],system.run[sh /var/lib/zabbix/user_scripts/nginx_total_requests.sh]
     volumes:
       - ./scripts/agent2:/var/lib/zabbix/user_scripts:ro
+      - ./zabbix/agent2/nginx-userparameter.conf:/etc/zabbix/zabbix_agent2.d/nginx-userparameter.conf:ro
     depends_on:
       - zabbix-server
       - nginx

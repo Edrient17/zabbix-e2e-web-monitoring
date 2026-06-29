@@ -32,16 +32,9 @@ NGINX_HOST = "nginx-sample"
 MIDIBUS_HOST = "midibus-web"
 
 NGINX_ITEM_KEYS = {
-    "active_connections": (
-        "system.run[sh /var/lib/zabbix/user_scripts/"
-        "nginx_active_connections.sh]"
-    ),
-    "process_count": (
-        "system.run[sh /var/lib/zabbix/user_scripts/nginx_process_count.sh]"
-    ),
-    "total_requests": (
-        "system.run[sh /var/lib/zabbix/user_scripts/nginx_total_requests.sh]"
-    ),
+    "active_connections": "nginx.active_connections",
+    "process_count": "nginx.process_count",
+    "total_requests": "nginx.total_requests",
 }
 
 
