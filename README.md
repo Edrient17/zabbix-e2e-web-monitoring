@@ -18,7 +18,7 @@ Docker Compose로 구성한 서비스는 다음과 같다.
 | zabbix-server | zabbix-server | Zabbix 모니터링 서버 |
 | zabbix-web | zabbix-web | Zabbix Web Frontend |
 | zabbix-agent2 | zabbix-agent2 | Zabbix Server에 호스트 상태 메트릭을 제공하는 모니터링 에이전트 |
-| nginx-agent2 | nginx-agent2 | nginx 프로세스 및 내부 상태를 `system.run[]`으로 수집하는 전용 에이전트 |
+| nginx-agent2 | nginx-agent2 | nginx 프로세스 및 내부 상태를 UserParameter로 수집하는 전용 에이전트 |
 | nginx | nginx-sample | Web Scenario 테스트용 샘플 웹서비스 |
 | selenium-chrome | selenium-chrome | Browser Item 실행을 위한 Selenium WebDriver/Chrome 컨테이너 |
 
@@ -308,17 +308,18 @@ nginx 샘플 웹서비스는 Web Scenario 가용성 점검과 nginx 내부 지�
 
 - `/nginx_status`는 Docker 내부 네트워크와 localhost에서만 접근하도록 제한되어 있으며 외부 공개 대상이 아니다.
 
-### 5.2 zabbix-agent2 system.run 기반 nginx 내부 상태 수집
+### 5.2 zabbix-agent2 UserParameter 기반 nginx 내부 상태 수집
 
-`nginx-agent2`는 `system.run[]` item을 통해 스크립트를 실행하고 nginx 프로세스 및 내부 지표를 수집한다.
+`nginx-agent2`는 UserParameter item을 통해 스크립트를 실행하고 nginx 프로세스 및 내부 지표를 수집한다.
+UserParameter 설정은 `zabbix/agent2/nginx-userparameter.conf`에 정의되어 있으며, Docker Compose에서 Agent2 설정 디렉터리로 읽기 전용 마운트된다.
 
 Zabbix UI에서 `nginx-sample` 호스트를 별도로 만들고 Agent Interface를 DNS `nginx-agent2`, Port `10050`으로 설정한다.
 이후 다음 item key를 Zabbix agent 타입으로 등록한다.
 
 ```text
-system.run[sh /var/lib/zabbix/user_scripts/nginx_process_count.sh]
-system.run[sh /var/lib/zabbix/user_scripts/nginx_active_connections.sh]
-system.run[sh /var/lib/zabbix/user_scripts/nginx_total_requests.sh]
+nginx.process_count
+nginx.active_connections
+nginx.total_requests
 ```
 
 예시 스크린샷
@@ -333,13 +334,13 @@ system.run[sh /var/lib/zabbix/user_scripts/nginx_total_requests.sh]
 
 | item key | 수집 값 | 목적 |
 | -------- | ------- | ---- |
-| `nginx_process_count.sh` | nginx master/worker 프로세스 수 | URL이 아니라 프로세스 기준으로 nginx 동작 여부 확인 |
-| `nginx_active_connections.sh` | 현재 active connection 수 | nginx 내부 연결 상태 확인 |
-| `nginx_total_requests.sh` | 누적 request 수 | 요청 처리량 추세 확인 |
+| `nginx.process_count` | nginx master/worker 프로세스 수 | URL이 아니라 프로세스 기준으로 nginx 동작 여부 확인 |
+| `nginx.active_connections` | 현재 active connection 수 | nginx 내부 연결 상태 확인 |
+| `nginx.total_requests` | 누적 request 수 | 요청 처리량 추세 확인 |
 
 ***보안상 주의할 점***은 다음과 같다.
 
-* `system.run[]`은 Agent가 OS 명령을 실행하는 기능이므로 전체 허용하지 않고 필요한 명령만 `AllowKey`로 제한한다.
+* UserParameter 설정 파일에는 필요한 nginx 지표 수집 명령만 등록한다.
 * `nginx-agent2`에는 Docker socket을 마운트하지 않는다. Docker socket을 열면 Agent가 다른 컨테이너나 호스트 Docker를 조작할 수 있어 권한 범위가 지나치게 커진다.
 * `/nginx_status`는 내부 지표 엔드포인트이므로 외부에 공개하지 않고 Docker 내부 네트워크에서만 접근하도록 `allow`/`deny`를 설정한다.
 * `nginx-agent2`는 `nginx-sample`의 PID namespace만 공유하여 프로세스 확인 범위를 nginx 컨테이너로 제한한다.
@@ -386,9 +387,9 @@ nginx 내부 지표를 수집하기 위해 `nginx-sample` Host를 별도로 등�
 
 | Item name | Key | Type of information | Update interval |
 | --- | --- | --- | --- |
-| nginx process count | `system.run[sh /var/lib/zabbix/user_scripts/nginx_process_count.sh]` | Numeric unsigned | `30s` |
-| nginx active connections | `system.run[sh /var/lib/zabbix/user_scripts/nginx_active_connections.sh]` | Numeric unsigned | `30s` |
-| nginx total requests | `system.run[sh /var/lib/zabbix/user_scripts/nginx_total_requests.sh]` | Numeric unsigned | `30s` |
+| nginx process count | `nginx.process_count` | Numeric unsigned | `30s` |
+| nginx active connections | `nginx.active_connections` | Numeric unsigned | `30s` |
+| nginx total requests | `nginx.total_requests` | Numeric unsigned | `30s` |
 
 ### 6.4 Web Scenario 등록
 
@@ -430,9 +431,9 @@ nginx 내부 지표 기반 Trigger는 `nginx-sample` Host에 등록한다.
 
 | Trigger name | Severity | Expression | 목적 |
 | --- | --- | --- | --- |
-| `nginx active connections is critically high` | High | `last(/nginx-sample/system.run[sh /var/lib/zabbix/user_scripts/nginx_active_connections.sh])>100` | 순간적인 active connection 급증 감지 |
-| `nginx active connections is high` | Warning | `min(/nginx-sample/system.run[sh /var/lib/zabbix/user_scripts/nginx_active_connections.sh],1m)>50` | 1분 이상 지속되는 active connection 과다 감지 |
-| `nginx request counter reset detected` | Information | `change(/nginx-sample/system.run[sh /var/lib/zabbix/user_scripts/nginx_total_requests.sh])<0` | nginx 재시작 또는 request counter 초기화 감지 |
+| `nginx active connections is critically high` | High | `last(/nginx-sample/nginx.active_connections)>100` | 순간적인 active connection 급증 감지 |
+| `nginx active connections is high` | Warning | `min(/nginx-sample/nginx.active_connections,1m)>50` | 1분 이상 지속되는 active connection 과다 감지 |
+| `nginx request counter reset detected` | Information | `change(/nginx-sample/nginx.total_requests)<0` | nginx 재시작 또는 request counter 초기화 감지 |
 
 ### 6.6 알람 발송 설정
 
